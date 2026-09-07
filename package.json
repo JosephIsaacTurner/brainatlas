@@ -1,0 +1,34 @@
+{
+  "name": "brainatlas",
+  "version": "1.0.0",
+  "description": "Brain and Skull Atlas - WebGL client-side neuroimaging viewer with synchronized oblique volumetric mesh clipping",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node server.mjs",
+    "cache": "node build_cache.mjs"
+  },
+  "keywords": [
+    "surfice",
+    "neuroimaging",
+    "webgl",
+    "threejs",
+    "mesh-clipping",
+    "oblique-slice",
+    "nifti",
+    "mri"
+  ],
+  "author": "Joseph Turner / Antigravity",
+  "license": "BSD-2-Clause",
+  "dependencies": {
+    "lil-gui": "^0.20.0",
+    "nifti-reader-js": "^0.8.0",
+    "pako": "^3.0.1",
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}

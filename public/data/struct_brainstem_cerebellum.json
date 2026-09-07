@@ -1,0 +1,30 @@
+{
+  "name": "struct_brainstem_cerebellum",
+  "sourcePath": "/Users/jiturner/Repositories/Standard/manjon_atlas/BrainstemCerebellumMask_0p5.obj",
+  "vertexCount": 131185,
+  "triangleCount": 262186,
+  "bounds": {
+    "min": [
+      -56.33449173,
+      -92.25007629,
+      -72
+    ],
+    "max": [
+      56.75,
+      -7.671173096,
+      0.858001709
+    ],
+    "center": [
+      0.20775413499999829,
+      -49.960624693,
+      -35.5709991455
+    ],
+    "size": [
+      113.08449173,
+      84.57890319399999,
+      72.858001709
+    ]
+  },
+  "rawBytes": 6294688,
+  "compressedBytes": 3647621
+}

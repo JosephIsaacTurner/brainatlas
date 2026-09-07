@@ -1,0 +1,30 @@
+{
+  "name": "ventricles",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/scratchwork/mni152_smwp_ventricles_ref_0p1.obj",
+  "vertexCount": 22585,
+  "triangleCount": 45169,
+  "bounds": {
+    "min": [
+      -38.97210693,
+      -82.76821136,
+      -58.58020782
+    ],
+    "max": [
+      41.64473724,
+      31.96533203,
+      30.18534851
+    ],
+    "center": [
+      1.3363151549999976,
+      -25.401439664999998,
+      -14.197429654999999
+    ],
+    "size": [
+      80.61684417000001,
+      114.73354339,
+      88.76555633
+    ]
+  },
+  "rawBytes": 1084084,
+  "compressedBytes": 604124
+}

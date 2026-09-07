@@ -1,0 +1,30 @@
+{
+  "name": "skin",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/data/raw/NYHead/NYhead_segmentations/skin_mask_filled_0p5.obj",
+  "vertexCount": 500153,
+  "triangleCount": 1000302,
+  "bounds": {
+    "min": [
+      -89.75128937,
+      -125.2502747,
+      -186.7500153
+    ],
+    "max": [
+      89.75256348,
+      91.75012207,
+      102.2514038
+    ],
+    "center": [
+      0.0006370550000056596,
+      -16.750076315,
+      -42.24930575
+    ],
+    "size": [
+      179.50385285,
+      217.00039677,
+      289.0014191
+    ]
+  },
+  "rawBytes": 24007312,
+  "compressedBytes": 14451485
+}

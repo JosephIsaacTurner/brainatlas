@@ -1,0 +1,30 @@
+{
+  "name": "struct_basal_ganglia",
+  "sourcePath": "/Users/jiturner/Repositories/Standard/manjon_atlas/BasalGangliaMask_0p5.obj",
+  "vertexCount": 50888,
+  "triangleCount": 101760,
+  "bounds": {
+    "min": [
+      -33.24385834,
+      -28.76246643,
+      -19.74385452
+    ],
+    "max": [
+      34.25,
+      26.71148682,
+      27.21052551
+    ],
+    "center": [
+      0.5030708299999986,
+      -1.0254898049999994,
+      3.7333354950000004
+    ],
+    "size": [
+      67.49385834,
+      55.47395325,
+      46.954380029999996
+    ]
+  },
+  "rawBytes": 2442448,
+  "compressedBytes": 1389222
+}

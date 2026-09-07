@@ -1,0 +1,30 @@
+{
+  "name": "arterial",
+  "sourcePath": "/Users/jiturner/Repositories/Standard/UBA167/UBA167_max_op1_manually_refined_skinny.obj",
+  "vertexCount": 31071,
+  "triangleCount": 62150,
+  "bounds": {
+    "min": [
+      -44.88332,
+      -55.475124,
+      -84.990822
+    ],
+    "max": [
+      46.281677,
+      39.21793,
+      16.589939
+    ],
+    "center": [
+      0.6991785000000021,
+      -8.128597,
+      -34.2004415
+    ],
+    "size": [
+      91.164997,
+      94.693054,
+      101.580761
+    ]
+  },
+  "rawBytes": 1491520,
+  "compressedBytes": 942045
+}

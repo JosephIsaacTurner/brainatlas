@@ -1,0 +1,30 @@
+{
+  "name": "skull_ohio",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/data/output/ohio_skull/ohio_skull/ohio_skull_mni_warped_mandible_fixed.obj",
+  "vertexCount": 562946,
+  "triangleCount": 1126256,
+  "bounds": {
+    "min": [
+      -76.793854,
+      -114.158058,
+      -172.273682
+    ],
+    "max": [
+      78.800766,
+      89.849869,
+      90.426765
+    ],
+    "center": [
+      1.003456,
+      -12.1540945,
+      -40.9234585
+    ],
+    "size": [
+      155.59462,
+      204.007927,
+      262.700447
+    ]
+  },
+  "rawBytes": 27025792,
+  "compressedBytes": 17824920
+}

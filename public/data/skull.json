@@ -1,0 +1,30 @@
+{
+  "name": "skull",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/data/output/skulls/full_skull/full_skull_mni_warped.obj",
+  "vertexCount": 1044801,
+  "triangleCount": 2090367,
+  "bounds": {
+    "min": [
+      -76.82349396,
+      -114.64254761,
+      -167.57196045
+    ],
+    "max": [
+      78.4082489,
+      85.77430725,
+      91.18625641
+    ],
+    "center": [
+      0.7923774700000052,
+      -14.434120179999994,
+      -38.192852020000004
+    ],
+    "size": [
+      155.23174286,
+      200.41685486,
+      258.75821686
+    ]
+  },
+  "rawBytes": 50159644,
+  "compressedBytes": 30023105
+}

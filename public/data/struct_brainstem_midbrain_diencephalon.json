@@ -1,0 +1,30 @@
+{
+  "name": "struct_brainstem_midbrain_diencephalon",
+  "sourcePath": "/Users/jiturner/Repositories/Standard/manjon_atlas/BrainstemMidbrainDiencephalonMask_0p5.obj",
+  "vertexCount": 62281,
+  "triangleCount": 124487,
+  "bounds": {
+    "min": [
+      -28.34025574,
+      -51.23176575,
+      -72
+    ],
+    "max": [
+      29.59936523,
+      3.668823242,
+      18.75
+    ],
+    "center": [
+      0.6295547450000001,
+      -23.781471254,
+      -26.625
+    ],
+    "size": [
+      57.93962097,
+      54.900588992,
+      90.75
+    ]
+  },
+  "rawBytes": 2988604,
+  "compressedBytes": 1709915
+}

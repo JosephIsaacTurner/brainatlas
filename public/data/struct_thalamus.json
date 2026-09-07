@@ -1,0 +1,30 @@
+{
+  "name": "struct_thalamus",
+  "sourcePath": "/Users/jiturner/Repositories/Standard/manjon_atlas/ThalamusMask_0p5.obj",
+  "vertexCount": 21705,
+  "triangleCount": 43406,
+  "bounds": {
+    "min": [
+      -25.75221252,
+      -35.88430786,
+      -8.9712677
+    ],
+    "max": [
+      26.72879791,
+      -0.75,
+      18.75
+    ],
+    "center": [
+      0.48829269500000017,
+      -18.31715393,
+      4.88936615
+    ],
+    "size": [
+      52.48101043,
+      35.13430786,
+      27.7212677
+    ]
+  },
+  "rawBytes": 1041808,
+  "compressedBytes": 588248
+}

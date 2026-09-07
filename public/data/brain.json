@@ -1,0 +1,30 @@
+{
+  "name": "brain",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/scratchwork/surf.obj",
+  "vertexCount": 924951,
+  "triangleCount": 1850608,
+  "bounds": {
+    "min": [
+      -71.517365,
+      -106.920433,
+      -72.000008
+    ],
+    "max": [
+      71.618858,
+      73.521996,
+      82.042007
+    ],
+    "center": [
+      0.05074650000000247,
+      -16.6992185,
+      5.020999500000002
+    ],
+    "size": [
+      143.136223,
+      180.442429,
+      154.042015
+    ]
+  },
+  "rawBytes": 44406136,
+  "compressedBytes": 33708269
+}

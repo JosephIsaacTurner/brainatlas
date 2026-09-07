@@ -1,0 +1,30 @@
+{
+  "name": "struct_limbic_system",
+  "sourcePath": "/Users/jiturner/Repositories/Standard/manjon_atlas/LimbicSystemMask_0p5.obj",
+  "vertexCount": 156178,
+  "triangleCount": 312405,
+  "bounds": {
+    "min": [
+      -36.24811935,
+      -54.7501297,
+      -45.54386139
+    ],
+    "max": [
+      38.13606262,
+      50.42233276,
+      50.50448608
+    ],
+    "center": [
+      0.9439716349999969,
+      -2.1638984699999995,
+      2.4803123450000015
+    ],
+    "size": [
+      74.38418197,
+      105.17246246,
+      96.04834747
+    ]
+  },
+  "rawBytes": 7497148,
+  "compressedBytes": 4362143
+}

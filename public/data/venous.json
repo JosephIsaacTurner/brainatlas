@@ -1,0 +1,30 @@
+{
+  "name": "venous",
+  "sourcePath": "/Users/jiturner/Repositories/Standard/mni_colin27_2008_nifti/manual_venous_structures_fixed.obj",
+  "vertexCount": 100229,
+  "triangleCount": 199215,
+  "bounds": {
+    "min": [
+      -61.225887,
+      -103.026527,
+      -63.250095
+    ],
+    "max": [
+      66.16983,
+      74.077759,
+      86.139801
+    ],
+    "center": [
+      2.471971500000002,
+      -14.474384,
+      11.444853000000002
+    ],
+    "size": [
+      127.395717,
+      177.104286,
+      149.38989600000002
+    ]
+  },
+  "rawBytes": 4796092,
+  "compressedBytes": 2775133
+}
