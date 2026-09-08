@@ -1,8 +1,17 @@
-New Request: Completed? [ ]
+New Request: Completed. [x]
 Great, everything's working well, I love where we're at. The next step is basically get things ready for a demo. 
-[ ] Write a gitignore file and make sure we know what we want to track and don't want to track at this stage to not get overwhelming
-[ ] Make our first initial commit
-[ ] Then, get to work trying to make this viewer live on my github page. We'll push this to my github (@JosephIsaacTurner), and make a github pages action or whatever (you can do this) so that it is linked to my github pages site. The url of my personal github page is josephiturner.com (but it is through github pages). So the url of the viewer should be something like josephiturner.com/brainatlas or something like that. You can figure out the details of how to do this, but it should be possible. 
+[x] Write a gitignore file and make sure we know what we want to track and don't want to track at this stage to not get overwhelming
+  - Created `.gitignore` excluding bulky local artifacts: `node_modules/`, `dist/`, `.cache/`, runtime logs (`server.log`), scratch scripts (`_verify_tmp.mjs`), `.DS_Store`, Python caches, and editor configurations.
+  - Tracked clean application source code (`src/`), configuration, documentation, scripts, and staged the pre-processed, optimized binary neuroimaging asset bundle in `public/data/` (under 35MB per file, well within GitHub's limits) so the static viewer can run entirely serverless.
+[x] Make our first initial commit
+  - Initialized git repository and made clean root commit (`857ceb4`) with 112 files: application engine, shaders, UI controllers, volume & mesh managers, colormaps, matcaps, and static binary dataset assets.
+[x] Then, get to work trying to make this viewer live on my github page. We'll push this to my github (@JosephIsaacTurner), and make a github pages action or whatever (you can do this) so that it is linked to my github pages site. The url of my personal github page is josephiturner.com (but it is through github pages). So the url of the viewer should be something like josephiturner.com/brainatlas or something like that. You can figure out the details of how to do this, but it should be possible. 
+  - Central Data Loader & Transparent Decompression (`src/dataLoader.js`): Replaced hardcoded server-dependent `/api/` endpoints with universal relative path resolution (`getDataUrl`, `fetchBinary`, `fetchJson`). Added transparent client-side gzip decompression using the native browser `DecompressionStream` (with `pako` fallback), allowing `.bin.gz` mesh and volume files to be served directly by static GitHub Pages without requiring a Node.js backend.
+  - Subpath Relative Build (`vite.config.js`, `index.html`): Configured `base: './'` so that JavaScript modules, CSS, matcaps, and binary assets seamlessly resolve whether hosted at a domain root or a subpath like `/brainatlas/`.
+  - GitHub Pages & Actions Workflow (`.github/workflows/deploy.yml`): Created automated GitHub Actions pipeline on `main` branch to install dependencies, execute `npm run build`, and deploy the resulting static distribution to GitHub Pages.
+  - Repository & Deployment Setup: Created public GitHub repository `JosephIsaacTurner/brainatlas`, set remote origin, and pushed `main`. Configured GitHub Pages with workflow deployment and enforced HTTPS.
+  - Live Demo: Successfully built and deployed to `https://josephiturner.com/brainatlas/` (and `https://josephisaacturner.github.io/brainatlas/`), verified with live HTTP/2 200 responses across index HTML, compiled JS bundle, skull and brain meshes, and volumetric masks.
+
 
 New Request: Completed. [x]
 Still one more bugfix:
