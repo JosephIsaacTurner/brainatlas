@@ -1,0 +1,30 @@
+{
+  "name": "subbone_left_parietal",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/data/output/OhioOnJagakeSkull/substructures/left_parietal.obj",
+  "vertexCount": 37969,
+  "triangleCount": 75934,
+  "bounds": {
+    "min": [
+      -75.691132,
+      -102.828705,
+      -25.942873
+    ],
+    "max": [
+      6.847065,
+      35.355038,
+      89.974907
+    ],
+    "center": [
+      -34.4220335,
+      -33.7368335,
+      32.016017000000005
+    ],
+    "size": [
+      82.538197,
+      138.183743,
+      115.91778
+    ]
+  },
+  "rawBytes": 1822480,
+  "compressedBytes": 1096836
+}

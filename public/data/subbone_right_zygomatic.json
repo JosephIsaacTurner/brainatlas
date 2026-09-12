@@ -1,0 +1,30 @@
+{
+  "name": "subbone_right_zygomatic",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/data/output/OhioOnJagakeSkull/substructures/right_zygomatic.obj",
+  "vertexCount": 5655,
+  "triangleCount": 11306,
+  "bounds": {
+    "min": [
+      34.374989,
+      13.545013,
+      -84.962158
+    ],
+    "max": [
+      69.655594,
+      62.56913,
+      -29.602474
+    ],
+    "center": [
+      52.0152915,
+      38.0570715,
+      -57.282316
+    ],
+    "size": [
+      35.280604999999994,
+      49.024117000000004,
+      55.359684
+    ]
+  },
+  "rawBytes": 271408,
+  "compressedBytes": 162192
+}

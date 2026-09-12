@@ -50,6 +50,11 @@ export class Viewer {
     // 6. Resize listener
     window.addEventListener('resize', () => this.onResize());
 
+    // 7. Animation Clock & Turntable Spin
+    this.clock = new THREE.Clock();
+    this.turntableSpin = false;
+    this.turntableSecondsPerRotation = 20;
+
     // Update callback hooks
     this.onRenderCallbacks = [];
   }
@@ -219,8 +224,25 @@ export class Viewer {
     this.onRenderCallbacks.push(fn);
   }
 
+  setTurntableSpin(enabled, secondsPerRotation = null) {
+    this.turntableSpin = Boolean(enabled);
+    this.controls.autoRotate = this.turntableSpin;
+    if (secondsPerRotation !== null) {
+      this.setTurntableSpeed(secondsPerRotation);
+    } else {
+      this.setTurntableSpeed(this.turntableSecondsPerRotation);
+    }
+  }
+
+  setTurntableSpeed(secondsPerRotation) {
+    const sec = Math.max(0.5, Number(secondsPerRotation) || 20);
+    this.turntableSecondsPerRotation = sec;
+    this.controls.autoRotateSpeed = 60.0 / sec;
+  }
+
   render() {
-    this.controls.update();
+    const delta = this.clock.getDelta();
+    this.controls.update(delta);
 
     for (let i = 0; i < this.onRenderCallbacks.length; i++) {
       this.onRenderCallbacks[i]();

@@ -1,0 +1,30 @@
+{
+  "name": "subbone_nasal",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/data/output/OhioOnJagakeSkull/substructures/nasal.obj",
+  "vertexCount": 3761,
+  "triangleCount": 7514,
+  "bounds": {
+    "min": [
+      -7.864915,
+      66.45195,
+      -66.765671
+    ],
+    "max": [
+      11.631343,
+      85.405594,
+      -32.464569
+    ],
+    "center": [
+      1.8832139999999997,
+      75.928772,
+      -49.61512
+    ],
+    "size": [
+      19.496257999999997,
+      18.953643999999997,
+      34.301102
+    ]
+  },
+  "rawBytes": 180448,
+  "compressedBytes": 110299
+}

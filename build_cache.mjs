@@ -12,22 +12,59 @@ if (!fs.existsSync(CACHE_DIR)) {
   fs.mkdirSync(CACHE_DIR, { recursive: true });
 }
 
+export const PUBLIC_DATA_DIR = path.join(__dirname, 'public', 'data');
+if (!fs.existsSync(PUBLIC_DATA_DIR)) {
+  fs.mkdirSync(PUBLIC_DATA_DIR, { recursive: true });
+}
+
 export const BRAIN_OBJ_PATH = '/Users/jiturner/Repositories/joseph_skulls/scratchwork/surf.obj';
 export const SKULL_OBJ_PATH = '/Users/jiturner/Repositories/joseph_skulls/data/output/skulls/full_skull/full_skull_mni_warped.obj';
 export const SKULL_OHIO_OBJ_PATH = '/Users/jiturner/Repositories/joseph_skulls/data/output/ohio_skull/ohio_skull/ohio_skull_mni_warped_mandible_fixed.obj';
 export const VENTRICLES_OBJ_PATH = '/Users/jiturner/Repositories/joseph_skulls/scratchwork/mni152_smwp_ventricles_ref_0p1.obj';
 export const SKIN_OBJ_PATH = '/Users/jiturner/Repositories/joseph_skulls/data/raw/NYHead/NYhead_segmentations/skin_mask_filled_0p5.obj';
-export const ARTERIAL_OBJ_PATH = '/Users/jiturner/Repositories/Standard/UBA167/UBA167_max_op1_manually_refined_skinny.obj';
+export const ARTERIAL_OBJ_PATH = '/Users/jiturner/Repositories/Standard/UBA167/manually_refined_again.obj';
 export const VENOUS_OBJ_PATH = '/Users/jiturner/Repositories/Standard/mni_colin27_2008_nifti/manual_venous_structures_fixed.obj';
+export const DURAL_FOLDS_OBJ_PATH = '/Users/jiturner/Downloads/falx_tentorium_mesh.obj';
 export const VOLUME_T1_PATH = '/Users/jiturner/Repositories/Standard/manjon_atlas/T1w_average.nii.gz';
 export const VOLUME_T2_PATH = '/Users/jiturner/Repositories/Standard/manjon_atlas/T2w_average.nii.gz';
 export const VOLUME_CT_PATH = '/Users/jiturner/Repositories/joseph_skulls/data/reference/reference_ct/template_with_skull_fixed_official_cleaned.nii.gz';
 export const VOLUME_FLASH25_PATH = '/Users/jiturner/Repositories/Standard/Synthesized_FLASH25_in_MNI_v2_500um.nii.gz';
-export const VOLUME_MNI_PATH = '/Users/jiturner/Repositories/Standard/mni152.nii.gz';
+export const VOLUME_MNI_PATH = '/Users/jiturner/Repositories/Standard/mni_icbm152_nlin_asym_09b_nifti/mni_icbm152_nlin_asym_09b/mni_icbm152_t1_tal_nlin_asym_09b_hires.nii';
+export const VOLUME_BIGBRAIN_PATH = '/Users/jiturner/Repositories/Standard/BigBrain-to-ICBM2009asym-nonlin-500um.nii';
 export const VOLUME_TISSUE_PATH = '/Users/jiturner/Repositories/Standard/manjon_atlas/tissue_atlas_masked.nii.gz';
 export const VOLUME_STRUCTURE_PATH = '/Users/jiturner/Repositories/Standard/manjon_atlas/structure_atlas.nii.gz';
 export const VOLUME_SUBSTRUCTURE_PATH = '/Users/jiturner/Repositories/Standard/manjon_atlas/substructure_atlas.nii.gz';
 export const VOLUME_NII_PATH = VOLUME_T1_PATH;
+
+export const SKULL_SUBSTRUCTURE_DIR = '/Users/jiturner/Repositories/joseph_skulls/data/output/OhioOnJagakeSkull/substructures';
+
+export const SKULL_SUBSTRUCTURE_CONFIGS = [
+  { id: 'cervical_vertebrae', name: 'Cervical Vertebrae', shortName: 'Cervical Vertebrae', file: 'cervical_vertebrae.obj', cacheKey: 'subbone_cervical_vertebrae', defaultColor: '#94a3b8' },
+  { id: 'ethmoid', name: 'Ethmoid Bone', shortName: 'Ethmoid', file: 'ethmoid.obj', cacheKey: 'subbone_ethmoid', defaultColor: '#14b8a6' },
+  { id: 'frontal', name: 'Frontal Bone', shortName: 'Frontal', file: 'frontal.obj', cacheKey: 'subbone_frontal', defaultColor: '#f59e0b' },
+  { id: 'left_inferior_nasal_concha', name: 'Left Inferior Nasal Concha', shortName: 'L Inf Nasal Concha', file: 'left_inferior_nasal_concha.obj', cacheKey: 'subbone_left_inferior_nasal_concha', defaultColor: '#84cc16' },
+  { id: 'left_lacrimal', name: 'Left Lacrimal Bone', shortName: 'L Lacrimal', file: 'left_lacrimal.obj', cacheKey: 'subbone_left_lacrimal', defaultColor: '#06b6d4' },
+  { id: 'left_maxilla', name: 'Left Maxilla', shortName: 'L Maxilla', file: 'left_maxilla.obj', cacheKey: 'subbone_left_maxilla', defaultColor: '#eab308' },
+  { id: 'left_palatine', name: 'Left Palatine Bone', shortName: 'L Palatine', file: 'left_palatine.obj', cacheKey: 'subbone_left_palatine', defaultColor: '#6366f1' },
+  { id: 'left_parietal', name: 'Left Parietal Bone', shortName: 'L Parietal', file: 'left_parietal.obj', cacheKey: 'subbone_left_parietal', defaultColor: '#3b82f6' },
+  { id: 'left_temporal', name: 'Left Temporal Bone', shortName: 'L Temporal', file: 'left_temporal.obj', cacheKey: 'subbone_left_temporal', defaultColor: '#10b981' },
+  { id: 'left_zygomatic', name: 'Left Zygomatic Bone', shortName: 'L Zygomatic', file: 'left_zygomatic.obj', cacheKey: 'subbone_left_zygomatic', defaultColor: '#a855f7' },
+  { id: 'mandible', name: 'Mandible', shortName: 'Mandible', file: 'mandible.obj', cacheKey: 'subbone_mandible', defaultColor: '#ef4444' },
+  { id: 'nasal', name: 'Nasal Bone', shortName: 'Nasal', file: 'nasal.obj', cacheKey: 'subbone_nasal', defaultColor: '#f97316' },
+  { id: 'occipital', name: 'Occipital Bone', shortName: 'Occipital', file: 'occipital.obj', cacheKey: 'subbone_occipital', defaultColor: '#8b5cf6' },
+  { id: 'right_inferior_nasal_concha', name: 'Right Inferior Nasal Concha', shortName: 'R Inf Nasal Concha', file: 'right_inferior_nasal_concha.obj', cacheKey: 'subbone_right_inferior_nasal_concha', defaultColor: '#a3e635' },
+  { id: 'right_lacrimal', name: 'Right Lacrimal Bone', shortName: 'R Lacrimal', file: 'right_lacrimal.obj', cacheKey: 'subbone_right_lacrimal', defaultColor: '#22d3ee' },
+  { id: 'right_maxillary', name: 'Right Maxilla', shortName: 'R Maxilla', file: 'right_maxillary.obj', cacheKey: 'subbone_right_maxillary', defaultColor: '#facc15' },
+  { id: 'right_palatine', name: 'Right Palatine Bone', shortName: 'R Palatine', file: 'right_palatine.obj', cacheKey: 'subbone_right_palatine', defaultColor: '#818cf8' },
+  { id: 'right_parietal', name: 'Right Parietal Bone', shortName: 'R Parietal', file: 'right_parietal.obj', cacheKey: 'subbone_right_parietal', defaultColor: '#60a5fa' },
+  { id: 'right_temporal', name: 'Right Temporal Bone', shortName: 'R Temporal', file: 'right_temporal.obj', cacheKey: 'subbone_right_temporal', defaultColor: '#34d399' },
+  { id: 'right_zygomatic', name: 'Right Zygomatic Bone', shortName: 'R Zygomatic', file: 'right_zygomatic.obj', cacheKey: 'subbone_right_zygomatic', defaultColor: '#c084fc' },
+  { id: 'sphenoid', name: 'Sphenoid Bone', shortName: 'Sphenoid', file: 'sphenoid.obj', cacheKey: 'subbone_sphenoid', defaultColor: '#ec4899' },
+  { id: 'vomer', name: 'Vomer', shortName: 'Vomer', file: 'vomer.obj', cacheKey: 'subbone_vomer', defaultColor: '#d946ef' }
+].map(s => ({
+  ...s,
+  path: path.join(SKULL_SUBSTRUCTURE_DIR, s.file)
+}));
 
 export const BRAIN_STRUCTURE_CONFIGS = [
   {
@@ -74,6 +111,17 @@ export const BRAIN_STRUCTURE_CONFIGS = [
     path: '/Users/jiturner/Repositories/Standard/manjon_atlas/LimbicSystemMask_0p5.obj',
     cacheKey: 'struct_limbic_system',
     defaultColor: '#f43f5e' // Rose
+  },
+  {
+    id: 'pituitary',
+    name: 'Pituitary',
+    shortName: 'Pituitary',
+    file: 'pituitary_v2.obj',
+    path: fs.existsSync('/Users/jiturner/Downloads/pituitary_v2.obj')
+      ? '/Users/jiturner/Downloads/pituitary_v2.obj'
+      : path.join(__dirname, 'public', 'data', 'raw', 'pituitary_v2.obj'),
+    cacheKey: 'struct_pituitary',
+    defaultColor: '#ec4899' // Pink
   }
 ];
 
@@ -311,6 +359,10 @@ export function processOBJ(name, filePath) {
   };
   fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2));
 
+  // Also sync to public/data for Vite static bundling
+  fs.copyFileSync(cachePath, path.join(PUBLIC_DATA_DIR, `${name}.bin.gz`));
+  fs.copyFileSync(metaPath, path.join(PUBLIC_DATA_DIR, `${name}.json`));
+
   console.timeEnd(`mesh_process_${name}`);
   console.log(`${name} cached: ${compressed.length} bytes (gzipped), ${vCount} verts, ${triCount} tris`);
 }
@@ -402,7 +454,11 @@ processOBJ('ventricles', VENTRICLES_OBJ_PATH);
 processOBJ('skin', SKIN_OBJ_PATH);
 processOBJ('arterial', ARTERIAL_OBJ_PATH);
 processOBJ('venous', VENOUS_OBJ_PATH);
+processOBJ('dural_folds', DURAL_FOLDS_OBJ_PATH);
 for (const s of BRAIN_STRUCTURE_CONFIGS) {
+  processOBJ(s.cacheKey, s.path);
+}
+for (const s of SKULL_SUBSTRUCTURE_CONFIGS) {
   processOBJ(s.cacheKey, s.path);
 }
 console.log('--- Binary Pre-caching Complete ---');

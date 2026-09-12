@@ -85,9 +85,15 @@ async function init() {
     });
 
     // Phase G: Venous Structures Mesh (manual_venous_structures.obj)
-    updateProgress(0.96, 'Loading Venous Structures Mesh...');
+    updateProgress(0.95, 'Loading Venous Structures Mesh...');
     await meshManager.loadVenous((ev) => {
-      updateProgress(0.96 + ev.progress * 0.04, ev.message);
+      updateProgress(0.95 + ev.progress * 0.02, ev.message);
+    });
+
+    // Phase H: Dural Folds Mesh (falx_tentorium_mesh.obj)
+    updateProgress(0.97, 'Loading Dural Folds Mesh...');
+    await meshManager.loadDuralFolds((ev) => {
+      updateProgress(0.97 + ev.progress * 0.02, ev.message);
     });
 
     // 6. Initialize Orientation Cube
@@ -102,6 +108,11 @@ async function init() {
     // 9. Initialize Multiplanar Slice Viewer
     const multiplanarViewer = new MultiplanarViewer(volumeManager, clippingManager, uiManager);
     uiManager.multiplanarViewer = multiplanarViewer;
+
+    // Load default cranial nerves tractography in background
+    tractographyManager.initDefaultTracts().catch((err) => {
+      console.warn('Failed to load default cranial nerves:', err);
+    });
 
     // Initial state synchronization: Clipping ON (axial plane 1), Skull ON, Brain ON, Soft Tissue ON, Plane Box ON
     clippingManager.update();

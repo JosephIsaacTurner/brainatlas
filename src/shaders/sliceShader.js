@@ -318,17 +318,6 @@ export const SliceShader = {
       return v * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), s);
     }
 
-    vec3 applyColormap(float t, int cmap) {
-      t = clamp(t, 0.0, 1.0);
-      if (cmap == 1) return colormapBone(t);
-      if (cmap == 2) return colormapHot(t);
-      if (cmap == 3) return colormapCool(t);
-      if (cmap == 4) return colormapRainbow(t);
-      if (cmap == 5) return colormapVelvet(t);
-      if (cmap == 6) return colormapAtlas(t);
-      return colormapGray(t);
-    }
-
     // Perceptually uniform standard scientific colormaps
     vec3 colormapViridis(float t) {
       const vec3 c0 = vec3(0.277727, 0.005407, 0.334099);
@@ -405,6 +394,31 @@ export const SliceShader = {
       vec3 c2 = vec3(0.70, 0.015, 0.15);
       if (t < 0.5) return mix(c0, c1, t * 2.0);
       return mix(c1, c2, (t - 0.5) * 2.0);
+    }
+
+    vec3 colormapRocket(float t) {
+      const vec3 c0 = vec3(-0.006441, 0.038141, 0.111241);
+      const vec3 c1 = vec3(1.967093, -0.522499, 0.379324);
+      const vec3 c2 = vec3(-6.536198, 15.533803, 6.423056);
+      const vec3 c3 = vec3(30.879229, -83.200653, -21.922740);
+      const vec3 c4 = vec3(-58.127114, 177.071341, 15.036539);
+      const vec3 c5 = vec3(45.452019, -161.166639, 11.680540);
+      const vec3 c6 = vec3(-12.640854, 53.185888, -10.866570);
+      return clamp(c0 + t * (c1 + t * (c2 + t * (c3 + t * (c4 + t * (c5 + t * c6))))), 0.0, 1.0);
+    }
+
+    // Base colormap evaluation
+    vec3 applyColormap(float t, int cmap) {
+      t = clamp(t, 0.0, 1.0);
+      if (cmap == 1) return colormapBone(t);
+      if (cmap == 2) return colormapHot(t);
+      if (cmap == 3) return colormapCool(t);
+      if (cmap == 4) return colormapRainbow(t);
+      if (cmap == 5) return colormapVelvet(t);
+      if (cmap == 6) return colormapAtlas(t);
+      if (cmap == 7) return colormapRocket(t);
+      if (cmap == 8) return colormapViridis(t);
+      return colormapGray(t);
     }
 
     // Specialized statistical overlay colormaps
@@ -491,6 +505,7 @@ export const SliceShader = {
           return mix(vec3(248.0 / 255.0, 254.0 / 255.0, 0.0), vec3(1.0, 0.0, 0.0), (t - n3) / (1.0 - n3));
         }
       }
+      if (cmap == 21) return colormapRocket(t);
       return vec3(0.92, 0.08, 0.0);
     }
 

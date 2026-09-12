@@ -44,6 +44,14 @@ export const VOLUME_CONFIGS = {
     sliderMax: 100,
     step: 1
   },
+  bigbrain: {
+    key: 'bigbrain',
+    label: 'BigBrain (500um)',
+    defaultRawWindow: [25000, 60000],
+    sliderMin: 0,
+    sliderMax: 65535,
+    step: 500
+  },
   tissue: {
     key: 'tissue',
     label: 'Tissue Atlas (9 Classes)',

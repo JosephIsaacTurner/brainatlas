@@ -1,0 +1,30 @@
+{
+  "name": "subbone_right_temporal",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/data/output/OhioOnJagakeSkull/substructures/right_temporal.obj",
+  "vertexCount": 28867,
+  "triangleCount": 57746,
+  "bounds": {
+    "min": [
+      12.826389,
+      -78.973175,
+      -85.814018
+    ],
+    "max": [
+      79.46981,
+      29.852455,
+      5.039824
+    ],
+    "center": [
+      46.1480995,
+      -24.56036,
+      -40.387097000000004
+    ],
+    "size": [
+      66.64342099999999,
+      108.82562999999999,
+      90.853842
+    ]
+  },
+  "rawBytes": 1385776,
+  "compressedBytes": 833509
+}

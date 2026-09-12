@@ -1,0 +1,30 @@
+{
+  "name": "subbone_ethmoid",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/data/output/OhioOnJagakeSkull/substructures/ethmoid.obj",
+  "vertexCount": 446165,
+  "triangleCount": 162864,
+  "bounds": {
+    "min": [
+      -25.80125999,
+      14.00599289,
+      -74.70827484
+    ],
+    "max": [
+      26.49386978,
+      76.07519531,
+      -20.04487228
+    ],
+    "center": [
+      0.34630489500000117,
+      45.0405941,
+      -47.37657356
+    ],
+    "size": [
+      52.29512977,
+      62.069202419999996,
+      54.66340256
+    ]
+  },
+  "rawBytes": 12662344,
+  "compressedBytes": 4514177
+}

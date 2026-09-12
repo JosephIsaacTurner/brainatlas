@@ -1,0 +1,30 @@
+{
+  "name": "subbone_left_maxilla",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/data/output/OhioOnJagakeSkull/substructures/left_maxilla.obj",
+  "vertexCount": 394000,
+  "triangleCount": 154762,
+  "bounds": {
+    "min": [
+      -50.13924408,
+      11.0706749,
+      -125.39302063
+    ],
+    "max": [
+      3.87831664,
+      76.69776154,
+      -30.38309669
+    ],
+    "center": [
+      -23.130463719999998,
+      43.88421822,
+      -77.88805866
+    ],
+    "size": [
+      54.01756072,
+      65.62708664,
+      95.00992394
+    ]
+  },
+  "rawBytes": 11313160,
+  "compressedBytes": 4230577
+}

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import GUI from 'lil-gui';
 import { VOLUME_CONFIGS } from './volumeManager.js';
 import { isGIIScalarFile } from './meshParsers.js';
-import { MESH_RENDER_STYLES, ADDITIONAL_BRAIN_STRUCTURES } from './meshManager.js';
+import { MESH_RENDER_STYLES, ADDITIONAL_BRAIN_STRUCTURES, SKULL_SUBSTRUCTURES } from './meshManager.js';
 
 function makeBold(controller) {
   if (controller && controller.domElement) {
@@ -36,6 +36,7 @@ export class UIManager {
     this.bgColorController = null;
 
     this.initHUD();
+    this.initTurntableControls();
     this.initToolbar();
     this.initGUI();
     this.initDragAndDrop();
@@ -53,11 +54,7 @@ export class UIManager {
     });
     if (this.tractographyManager) {
       this.tractographyManager.onLoaded(() => {
-        if (this.tractographyFolder) {
-          this.setupTractographyControls(this.tractographyFolder);
-          this.switchTab('meshes');
-          this.tractographyFolder.open();
-        }
+        // Tractography loaded: UI updates via reactive callbacks
       });
     }
   }
@@ -174,7 +171,12 @@ export class UIManager {
       this.clipMasterController.updateDisplay();
     }
 
+    if (this.tractographyManager) {
+      this.tractographyManager.updateClipping();
+    }
+
     this.updateHUD();
+
   }
 
   setBrainVisible(visible) {
@@ -243,6 +245,34 @@ export class UIManager {
     }
   }
 
+  setDuralFoldsVisible(visible) {
+    this.meshManager.setDuralFoldsVisible(visible);
+    const ind = document.getElementById('ind-dural');
+    const btn = document.getElementById('btn-toggle-dural');
+    if (ind) ind.classList.toggle('active', visible);
+    if (btn) btn.classList.toggle('active', visible);
+    if (this.duralVisController) {
+      this.duralVisController.updateDisplay();
+    }
+  }
+
+  setTractsVisible(visible) {
+    if (this.tractographyManager) {
+      this.tractographyManager.setVisible(visible);
+      if (visible && this.tractographyManager.enabledCount === 0) {
+        this.tractographyManager.enableDefaultCranialNerves();
+      }
+    }
+    const ind = document.getElementById('ind-tracts');
+    const btn = document.getElementById('btn-toggle-tracts');
+    if (ind) ind.classList.toggle('active', visible);
+    if (btn) btn.classList.toggle('active', visible);
+    if (this.tractVisController) {
+      this.tractVisController.updateDisplay();
+    }
+  }
+
+
   setSliceVisible(visible) {
     if (this.clippingManager.sliceVisible !== visible) {
       this.clippingManager.sliceVisible = visible;
@@ -286,6 +316,110 @@ export class UIManager {
       <div class="hud-item" id="hud-overlay-row" style="display: none;"><span class="hud-label">Active Overlay:</span> <span id="hud-overlay-name" style="color: #f59e0b;">None</span></div>
     `;
     document.body.appendChild(this.hudElement);
+  }
+
+  initTurntableControls() {
+    const container = document.createElement('div');
+    container.id = 'turntable-panel';
+    container.className = 'turntable-panel';
+
+    const checkboxLabel = document.createElement('label');
+    checkboxLabel.className = 'turntable-checkbox-label';
+    checkboxLabel.title = 'Continuously rotate 3D view around vertical turntable axis';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = 'turntable-spin-cb';
+    checkbox.checked = false;
+
+    const labelText = document.createElement('span');
+    labelText.className = 'turntable-label-text';
+    labelText.textContent = 'Turntable Spin';
+
+    checkboxLabel.appendChild(checkbox);
+    checkboxLabel.appendChild(labelText);
+    container.appendChild(checkboxLabel);
+
+    // Rate control element (hidden by default, appears when checkbox is checked)
+    const rateContainer = document.createElement('div');
+    rateContainer.id = 'turntable-rate-container';
+    rateContainer.className = 'turntable-rate-container';
+    rateContainer.style.display = 'none';
+
+    const rateHeader = document.createElement('div');
+    rateHeader.className = 'turntable-rate-header';
+
+    const rateTitle = document.createElement('span');
+    rateTitle.className = 'turntable-rate-title';
+    rateTitle.textContent = 'Rate:';
+
+    const rateWrap = document.createElement('div');
+    rateWrap.className = 'turntable-rate-wrap';
+
+    const rateInput = document.createElement('input');
+    rateInput.type = 'number';
+    rateInput.id = 'turntable-rate-input';
+    rateInput.className = 'turntable-rate-num';
+    rateInput.min = '1';
+    rateInput.max = '300';
+    rateInput.step = '1';
+    rateInput.value = '20';
+    rateInput.title = 'Seconds per full rotation';
+
+    const rateUnit = document.createElement('span');
+    rateUnit.className = 'turntable-unit';
+    rateUnit.textContent = 's / rot';
+
+    rateWrap.appendChild(rateInput);
+    rateWrap.appendChild(rateUnit);
+
+    rateHeader.appendChild(rateTitle);
+    rateHeader.appendChild(rateWrap);
+    rateContainer.appendChild(rateHeader);
+
+    const rateSlider = document.createElement('input');
+    rateSlider.type = 'range';
+    rateSlider.id = 'turntable-rate-slider';
+    rateSlider.className = 'turntable-rate-slider';
+    rateSlider.min = '3';
+    rateSlider.max = '120';
+    rateSlider.step = '1';
+    rateSlider.value = '20';
+    rateSlider.title = 'Seconds per full rotation';
+    rateContainer.appendChild(rateSlider);
+
+    container.appendChild(rateContainer);
+    document.body.appendChild(container);
+
+    const updateSpeed = (val) => {
+      const sec = Math.max(0.5, Math.min(600, parseFloat(val) || 20));
+      rateInput.value = Math.round(sec);
+      rateSlider.value = Math.min(120, Math.max(3, Math.round(sec)));
+      if (this.viewer) {
+        this.viewer.setTurntableSpeed(sec);
+      }
+    };
+
+    checkbox.addEventListener('change', () => {
+      const active = checkbox.checked;
+      rateContainer.style.display = active ? 'flex' : 'none';
+      const sec = parseFloat(rateInput.value) || 20;
+      if (this.viewer) {
+        this.viewer.setTurntableSpin(active, sec);
+      }
+    });
+
+    rateSlider.addEventListener('input', (e) => {
+      updateSpeed(e.target.value);
+    });
+
+    rateInput.addEventListener('change', (e) => {
+      updateSpeed(e.target.value);
+    });
+
+    rateInput.addEventListener('input', (e) => {
+      updateSpeed(e.target.value);
+    });
   }
 
   updateHUD() {
@@ -376,6 +510,7 @@ export class UIManager {
             <option value="ct">CT (Skull & Head)</option>
             <option value="flash25">Edlow Ex Vivo</option>
             <option value="mni152">MNI152</option>
+            <option value="bigbrain">BigBrain (500um)</option>
             <option value="tissue">Tissue Atlas (9 Classes)</option>
             <option value="structure">Structure Atlas (54 Labels)</option>
             <option value="substructure">Substructure Atlas (352 Labels)</option>
@@ -400,7 +535,7 @@ export class UIManager {
       </div>
 
       <div class="toolbar-row toolbar-row-bottom">
-        <!-- Anatomical Structure Toggles (Order: Brain, Skull, Soft Tissue, Arterial, Venous, Ventricles) in the Same Line -->
+        <!-- Anatomical Structure Toggles (Order: Brain, Skull, Soft Tissue, Arterial, Venous, Ventricles, Dural Folds) in the Same Line -->
         <div class="toolbar-structures-group">
           <button class="btn btn-toggle active" id="btn-toggle-brain" title="Toggle Brain Mesh (B)">
             <span class="indicator active" id="ind-brain"></span> Brain
@@ -424,6 +559,14 @@ export class UIManager {
 
           <button class="btn btn-toggle" id="btn-toggle-ventricles" title="Toggle Ventricles Mask (V)">
             <span class="indicator" id="ind-ventricles"></span> Ventricles
+          </button>
+
+          <button class="btn btn-toggle" id="btn-toggle-dural" title="Toggle Dural Folds (D)">
+            <span class="indicator" id="ind-dural"></span> Dural Folds
+          </button>
+
+          <button class="btn btn-toggle" id="btn-toggle-tracts" title="Toggle Tractography (T)">
+            <span class="indicator" id="ind-tracts"></span> Tracts
           </button>
         </div>
 
@@ -502,6 +645,22 @@ export class UIManager {
       this.setVentriclesVisible(!this.meshManager.ventriclesVisible);
       this.switchTab('meshes');
     });
+
+    document.getElementById('btn-toggle-dural').addEventListener('click', () => {
+      this.setDuralFoldsVisible(!this.meshManager.duralFoldsVisible);
+      this.switchTab('meshes');
+    });
+
+    const btnTracts = document.getElementById('btn-toggle-tracts');
+    if (btnTracts) {
+      btnTracts.addEventListener('click', () => {
+        if (this.tractographyManager) {
+          this.setTractsVisible(!this.tractographyManager.visible);
+          this.switchTab('meshes');
+        }
+      });
+    }
+
 
     // Centralized Volumetric Imaging Slice Toggle
     document.getElementById('btn-toggle-slice').addEventListener('click', () => {
@@ -602,8 +761,8 @@ export class UIManager {
   }
 
   initMeshGUI() {
-    // 1. BRAIN MESH & VELVET SHADER
-    const brainFolder = this.meshGui.addFolder('🧠 Brain Mesh');
+    // 1. BRAIN & VELVET SHADER
+    const brainFolder = this.meshGui.addFolder('🧠 Brain');
     this.brainVisController = makeBold(brainFolder.add(this.meshManager, 'brainVisible').name('Visible')).onChange((v) => {
       this.setBrainVisible(v);
     });
@@ -651,8 +810,8 @@ export class UIManager {
 
     brainFolder.addColor(this.meshManager, 'brainColor').name('Surface Color').onChange((v) => this.meshManager.setBrainColor(v));
 
-    // Surf Ice Velvet Shading Parameters
-    const velvetFolder = brainFolder.addFolder('✨ Surf Ice Velvet Shading');
+    // Brain Velvet Shader Style Parameters
+    const velvetFolder = brainFolder.addFolder('✨ Brain Velvet Shader Style');
     velvetFolder.add(this.meshManager, 'velvetAmbient', 0.0, 1.0, 0.01).name('Ambient').onChange(() => this.meshManager.updateVelvetUniforms());
     velvetFolder.add(this.meshManager, 'velvetDiffuse', 0.0, 1.0, 0.01).name('Diffuse').onChange(() => this.meshManager.updateVelvetUniforms());
     velvetFolder.add(this.meshManager, 'velvetSpecular', 0.0, 1.5, 0.01).name('Specular').onChange(() => this.meshManager.updateVelvetUniforms());
@@ -662,24 +821,34 @@ export class UIManager {
     velvetFolder.add(this.meshManager, 'velvetEdge', 0.0, 1.0, 0.05).name('Edge Darkening').onChange(() => this.meshManager.updateVelvetUniforms());
     velvetFolder.add(this.meshManager, 'velvetLightBackfaces').name('Light Backfaces').onChange(() => this.meshManager.updateVelvetUniforms());
 
-    // 2. SKULL MESH (Full vs Ohio)
-    const skullFolder = this.meshGui.addFolder('💀 Skull Mesh');
+    // 2. SKULL (Full vs Ohio)
+    const skullFolder = this.meshGui.addFolder('💀 Skull');
     this.skullVisController = makeBold(skullFolder.add(this.meshManager, 'skullVisible').name('Visible')).onChange((v) => {
       this.setSkullVisible(v);
     });
     makeBold(skullFolder.add(this.meshManager, 'skullClipped').name('Clip Skull')).onChange((v) => this.meshManager.setSkullClipped(v));
 
-    skullFolder.add(this.meshManager, 'currentSkullType', {
+    this.skullModelController = skullFolder.add(this.meshManager, 'currentSkullType', {
       'Full Skull (MNI Warped)': 'full',
       'Ohio Skull (MNI Warped)': 'ohio'
-    }).name('Skull Model').onChange((type) => this.meshManager.switchSkull(type));
+    }).name('Skull Model').onChange(async (type) => {
+      await this.meshManager.switchSkull(type);
+      if (this.skullSubstructuresContainer) {
+        this.skullSubstructuresContainer.style.display = 'flex';
+      }
+      if (this.refreshSkullSubstructures) {
+        this.refreshSkullSubstructures();
+      }
+    });
+
+    this.setupSkullSubstructuresMultiselect(skullFolder, this.skullModelController);
 
     skullFolder.add(this.meshManager, 'skullOpacity', 0.05, 1.0, 0.01).name('Opacity').onChange((v) => this.meshManager.setSkullOpacity(v));
     skullFolder.add(this.meshManager, 'skullStyle', MESH_RENDER_STYLES).name('Style').onChange((v) => this.meshManager.setSkullStyle(v));
     skullFolder.addColor(this.meshManager, 'skullColor').name('Bone Color').onChange(() => this.meshManager.updateSkullMaterial());
 
-    // 3. SOFT TISSUE MESH (formerly skin)
-    const skinFolder = this.meshGui.addFolder('👤 Soft Tissue Mesh');
+    // 3. SOFT TISSUE
+    const skinFolder = this.meshGui.addFolder('👤 Soft Tissue');
     this.skinVisController = makeBold(skinFolder.add(this.meshManager, 'skinVisible').name('Visible')).onChange((v) => {
       this.setSkinVisible(v);
     });
@@ -715,8 +884,8 @@ export class UIManager {
     venousFolder.add(this.meshManager, 'venousStyle', MESH_RENDER_STYLES).name('Style').onChange((v) => this.meshManager.setVenousStyle(v));
     venousFolder.addColor(this.meshManager, 'venousColor').name('Color').onChange(() => this.meshManager.updateVenousMaterial());
 
-    // 6. VENTRICLE MASK MESH
-    const ventFolder = this.meshGui.addFolder('💧 Ventricle Mask');
+    // 6. VENTRICLES
+    const ventFolder = this.meshGui.addFolder('💧 Ventricles');
     this.ventriclesVisController = makeBold(ventFolder.add(this.meshManager, 'ventriclesVisible').name('Visible')).onChange((v) => {
       this.setVentriclesVisible(v);
     });
@@ -727,15 +896,27 @@ export class UIManager {
     ventFolder.add(this.meshManager, 'ventriclesStyle', MESH_RENDER_STYLES).name('Style').onChange((v) => this.meshManager.setVentriclesStyle(v));
     ventFolder.addColor(this.meshManager, 'ventriclesColor').name('Color').onChange(() => this.meshManager.updateVentriclesMaterial());
 
-    // 7. CUSTOM OBJ/PLY/STL MESHES
-    this.customMeshFolder = this.meshGui.addFolder('📂 Custom Meshes (.obj, .mz3, .gii, .ply, .stl)');
-    this.setupCustomMeshControls(this.customMeshFolder);
+    // 7. DURAL FOLDS MESH (falx_tentorium_mesh.obj)
+    const duralFolder = this.meshGui.addFolder('🛡️ Dural Folds');
+    this.duralVisController = makeBold(duralFolder.add(this.meshManager, 'duralFoldsVisible').name('Visible')).onChange((v) => {
+      this.setDuralFoldsVisible(v);
+    });
+    makeBold(duralFolder.add(this.meshManager, 'duralFoldsClipped').name('Clip Dural Folds')).onChange((v) => {
+      this.meshManager.setDuralFoldsClipped(v);
+    });
+    duralFolder.add(this.meshManager, 'duralFoldsOpacity', 0.05, 1.0, 0.01).name('Opacity').onChange((v) => this.meshManager.setDuralFoldsOpacity(v));
+    duralFolder.add(this.meshManager, 'duralFoldsStyle', MESH_RENDER_STYLES).name('Style').onChange((v) => this.meshManager.setDuralFoldsStyle(v));
+    duralFolder.addColor(this.meshManager, 'duralFoldsColor').name('Color').onChange(() => this.meshManager.updateDuralFoldsMaterial());
 
-    // 8. TRACTOGRAPHY (.trk / .trk.gz)
+    // 8. TRACTOGRAPHY (.trk / .trk.gz) - Listed higher than Custom Meshes
     this.tractographyFolder = this.meshGui.addFolder('🧵 Tractography (.trk / .trk.gz)');
     this.setupTractographyControls(this.tractographyFolder);
 
-    // 9. ENVIRONMENT & VIEW
+    // 9. CUSTOM OBJ/PLY/STL MESHES
+    this.customMeshFolder = this.meshGui.addFolder('📂 Custom Meshes (.obj, .mz3, .gii, .ply, .stl)');
+    this.setupCustomMeshControls(this.customMeshFolder);
+
+    // 10. ENVIRONMENT & VIEW
     const envFolder = this.meshGui.addFolder('🎨 Environment & View');
     this.bgPresetController = envFolder.add(this, 'bgPreset', {
       'Dark (#121316)': 'dark',
@@ -757,7 +938,18 @@ export class UIManager {
     envFolder.add(this.orientationCube, 'visible').name('Orientation Cube').onChange((v) => this.orientationCube.setVisible(v));
     envFolder.add({ fn: () => this.viewer.captureScreenshot(2, false) }, 'fn').name('Export Screenshot (2x PNG)');
 
-    brainFolder.open();
+    // Default all folders in the right menu to collapsed on initial load
+    brainFolder.close();
+    velvetFolder.close();
+    skullFolder.close();
+    skinFolder.close();
+    arterialFolder.close();
+    venousFolder.close();
+    ventFolder.close();
+    duralFolder.close();
+    this.tractographyFolder.close();
+    this.customMeshFolder.close();
+    envFolder.close();
   }
 
   initVolumeGUI() {
@@ -801,6 +993,8 @@ export class UIManager {
 
     this.colormapController = volFolder.add(this.clippingManager, 'colormap', {
       'Grayscale': 0,
+      'Rocket': 7,
+      'Viridis': 8,
       'Bone (Warm Ivory)': 1,
       'Hot Spectrum': 2,
       'Cool Spectrum': 3,
@@ -853,7 +1047,8 @@ export class UIManager {
     volFolder.add(this.clippingManager, 'slabMode', { 'Single Slice': 0, 'MIP': 1, 'Average': 2 }).name('Slab Mode').onChange(() => this.clippingManager.update());
     volFolder.add({ reload: async () => { await this.reloadCurrentVolume(); } }, 'reload').name('🔄 Reload Volume from Disk');
 
-    volFolder.open();
+    // Default to collapsed on initial load
+    volFolder.close();
 
     // Initialize raw window sliders for initial volume
     this.updateWindowSlidersForVolume(this.volumeManager.currentVolumeType);
@@ -1029,8 +1224,10 @@ export class UIManager {
       p._updateDepthLabel = updateDepthLabel;
       this.planeControllers.push(cActive, cMNIDepth, cAz, cEl, cInv, cBox);
 
-      if (p.id === 1) pFolder.open();
+      pFolder.open();
     }
+
+    this.clipGui.open();
   }
 
   resetClippingPlanes() {
@@ -1151,7 +1348,8 @@ export class UIManager {
       'Red-Yellow': 17,
       'Winters (Blue-Green)': 18,
       'Grayscale': 19,
-      'ACTC (Surf Ice)': 20,
+      'ACTC': 20,
+      'Rocket': 21,
       'Hot Spectrum': 0,
       'Cool Spectrum': 2,
       'Rainbow (Jet)': 1,
@@ -1261,7 +1459,7 @@ export class UIManager {
         })
         .listen();
 
-      posFolder.open();
+      posFolder.close();
 
       // 2. Negative Color Map Section
       const negFolder = folder.addFolder('📉 Negative Color Map');
@@ -1301,7 +1499,7 @@ export class UIManager {
         })
         .listen();
 
-      if (ov.hasNeg) negFolder.open();
+      negFolder.close();
 
       // 3. Threshold-based Contours (only for volume overlays)
       if (ov.type === 'volume') {
@@ -1384,12 +1582,12 @@ export class UIManager {
           })
           .listen();
 
-        contourFolder.open();
+        contourFolder.close();
       }
 
       // Trash / Remove button
       folder.add({ fn: () => this.volumeManager.removeOverlay(ov.id) }, 'fn').name('🗑️ Remove Overlay');
-      folder.open();
+      folder.close();
     });
 
     if (panel) {
@@ -1833,6 +2031,401 @@ export class UIManager {
     };
   }
 
+  setupSkullSubstructuresMultiselect(skullFolder, anchorController) {
+    const container = document.createElement('div');
+    container.className = 'controller custom-multiselect-controller';
+    container.style.display = 'flex';
+    this.skullSubstructuresContainer = container;
+
+    const ensureOhioSkullMode = async () => {
+      if (this.meshManager.currentSkullType !== 'ohio') {
+        if (this.skullModelController) {
+          this.skullModelController.setValue('ohio');
+        } else {
+          await this.meshManager.switchSkull('ohio');
+        }
+      }
+    };
+
+    const nameLabel = document.createElement('div');
+    nameLabel.className = 'name';
+    nameLabel.textContent = 'Sub-bones';
+    nameLabel.title = 'Ohio Skull Sub-bones (22 individual bones)';
+    container.appendChild(nameLabel);
+
+    const widget = document.createElement('div');
+    widget.className = 'widget multiselect-widget';
+
+    const toggleBtn = document.createElement('button');
+    toggleBtn.type = 'button';
+    toggleBtn.className = 'multiselect-toggle-btn';
+
+    const btnText = document.createElement('span');
+    btnText.className = 'multiselect-btn-text';
+    btnText.textContent = `All (${SKULL_SUBSTRUCTURES.length}) selected`;
+
+    const arrow = document.createElement('span');
+    arrow.className = 'multiselect-arrow';
+    arrow.textContent = '▾';
+
+    toggleBtn.appendChild(btnText);
+    toggleBtn.appendChild(arrow);
+    widget.appendChild(toggleBtn);
+
+    const menu = document.createElement('div');
+    menu.className = 'multiselect-menu';
+    menu.style.display = 'none';
+
+    // Actions header (All / None quick toggle)
+    const actionsBar = document.createElement('div');
+    actionsBar.className = 'multiselect-actions';
+
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'multiselect-menu-title';
+    titleSpan.textContent = 'Bones (22)';
+
+    const btnGroup = document.createElement('div');
+    btnGroup.className = 'multiselect-quick-btns';
+
+    const allBtn = document.createElement('button');
+    allBtn.type = 'button';
+    allBtn.className = 'multiselect-quick-btn';
+    allBtn.textContent = 'All';
+
+    const noneBtn = document.createElement('button');
+    noneBtn.type = 'button';
+    noneBtn.className = 'multiselect-quick-btn';
+    noneBtn.textContent = 'None';
+
+    btnGroup.appendChild(allBtn);
+    btnGroup.appendChild(noneBtn);
+    actionsBar.appendChild(titleSpan);
+    actionsBar.appendChild(btnGroup);
+    menu.appendChild(actionsBar);
+
+    // Checklist of substructures
+    const list = document.createElement('div');
+    list.className = 'multiselect-list';
+
+    const checkboxes = {};
+    const colorInputs = {};
+
+    const updateButtonSummary = () => {
+      const selected = Object.keys(this.meshManager.skullSubstructures).filter(
+        id => this.meshManager.skullSubstructures[id]?.enabled
+      );
+      if (selected.length === 0) {
+        btnText.textContent = 'None selected';
+      } else if (selected.length === SKULL_SUBSTRUCTURES.length) {
+        btnText.textContent = `All (${selected.length}) selected`;
+      } else if (selected.length === 1) {
+        const item = SKULL_SUBSTRUCTURES.find(s => s.id === selected[0]);
+        btnText.textContent = item?.shortName || item?.name || '1 selected';
+      } else {
+        btnText.textContent = `${selected.length} selected`;
+      }
+    };
+
+    this.refreshSkullSubstructures = () => {
+      for (const struct of SKULL_SUBSTRUCTURES) {
+        if (checkboxes[struct.id]) {
+          checkboxes[struct.id].checked = !!this.meshManager.skullSubstructures[struct.id]?.enabled;
+        }
+      }
+      updateButtonSummary();
+    };
+
+    const swatchDots = {};
+
+    const setBoneColor = async (id, hexVal) => {
+      if (swatchDots[id]) swatchDots[id].style.backgroundColor = hexVal;
+      if (colorInputs[id]) colorInputs[id].value = hexVal;
+      this.meshManager.setSkullSubstructureColor(id, hexVal);
+      await ensureOhioSkullMode();
+    };
+
+    let currentCategory = null;
+    const categoryLabels = {
+      'mandible_cervical': 'Mandible & Cervical Vertebrae',
+      'cranial': 'Cranial Bones',
+      'face': 'Face Bones'
+    };
+
+    SKULL_SUBSTRUCTURES.forEach((struct, idx) => {
+      if (struct.category !== currentCategory) {
+        currentCategory = struct.category;
+        const groupHeader = document.createElement('div');
+        groupHeader.className = 'multiselect-group-header';
+        groupHeader.textContent = categoryLabels[currentCategory] || currentCategory;
+        list.appendChild(groupHeader);
+      }
+
+      const itemRow = document.createElement('div');
+      itemRow.className = 'multiselect-item';
+
+      const leftContainer = document.createElement('div');
+      leftContainer.className = 'multiselect-item-left';
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.className = 'multiselect-checkbox';
+      cb.id = `ms-check-skull-${struct.id}`;
+      cb.checked = !!this.meshManager.skullSubstructures[struct.id]?.enabled;
+      checkboxes[struct.id] = cb;
+
+      const labelText = document.createElement('label');
+      labelText.className = 'multiselect-item-text';
+      labelText.htmlFor = `ms-check-skull-${struct.id}`;
+      labelText.textContent = struct.name;
+      labelText.title = struct.name;
+
+      leftContainer.appendChild(cb);
+      leftContainer.appendChild(labelText);
+
+      // Color swatch and picker popover
+      const colorContainer = document.createElement('div');
+      colorContainer.className = 'multiselect-color-container';
+
+      const curColorHex = this.meshManager.skullSubstructures[struct.id]?.defaultColorHex || struct.defaultColorHex;
+
+      const colorSwatch = document.createElement('button');
+      colorSwatch.type = 'button';
+      colorSwatch.className = 'multiselect-color-swatch-btn';
+      colorSwatch.title = `Color for ${struct.name} (click to choose color)`;
+
+      const swatchDot = document.createElement('span');
+      swatchDot.className = 'multiselect-swatch-dot';
+      swatchDot.style.backgroundColor = curColorHex;
+      swatchDots[struct.id] = swatchDot;
+
+      const swatchCaret = document.createElement('span');
+      swatchCaret.className = 'multiselect-swatch-caret';
+      swatchCaret.textContent = '▾';
+
+      colorSwatch.appendChild(swatchDot);
+      colorSwatch.appendChild(swatchCaret);
+
+      const hiddenColorInput = document.createElement('input');
+      hiddenColorInput.type = 'color';
+      hiddenColorInput.className = 'multiselect-hidden-color-input';
+      hiddenColorInput.value = curColorHex;
+      colorInputs[struct.id] = hiddenColorInput;
+
+      hiddenColorInput.addEventListener('input', (e) => {
+        setBoneColor(struct.id, e.target.value);
+      });
+
+      hiddenColorInput.addEventListener('change', (e) => {
+        setBoneColor(struct.id, e.target.value);
+      });
+
+      const colorPopup = document.createElement('div');
+      colorPopup.className = 'structure-color-popup';
+      if (idx >= 6) {
+        colorPopup.classList.add('popup-upward');
+      }
+      colorPopup.style.display = 'none';
+
+      const renderColorPopup = () => {
+        colorPopup.innerHTML = '';
+
+        const popupHeader = document.createElement('div');
+        popupHeader.className = 'color-popup-header';
+        popupHeader.textContent = 'Bone Color';
+        colorPopup.appendChild(popupHeader);
+
+        const presetsContainer = document.createElement('div');
+        presetsContainer.className = 'color-popup-presets';
+
+        const activeColorHex = this.meshManager.skullSubstructures[struct.id]?.defaultColorHex || struct.defaultColorHex;
+        const mainSkullHex = '#' + new THREE.Color(this.meshManager.skullColor).getHexString();
+
+        const colorOptions = [
+          { id: 'default', name: 'Default Bone Color', hex: mainSkullHex },
+          { id: 'anatomical', name: `Anatomical Color (${struct.shortName || struct.name})`, hex: struct.anatomicalColorHex || struct.defaultColorHex }
+        ];
+
+
+        colorOptions.forEach(opt => {
+          const optRow = document.createElement('button');
+          optRow.type = 'button';
+          optRow.className = 'color-popup-option';
+
+          const optDot = document.createElement('span');
+          optDot.className = 'color-popup-dot';
+          optDot.style.backgroundColor = opt.hex;
+
+          const optLabel = document.createElement('span');
+          optLabel.className = 'color-popup-label';
+          optLabel.textContent = opt.name;
+
+          optRow.appendChild(optDot);
+          optRow.appendChild(optLabel);
+
+          const isCurrent = activeColorHex.toLowerCase() === opt.hex.toLowerCase();
+          if (isCurrent) {
+            optRow.classList.add('active');
+            const check = document.createElement('span');
+            check.className = 'color-popup-check';
+            check.textContent = '✓';
+            optRow.appendChild(check);
+          }
+
+          optRow.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setBoneColor(struct.id, opt.hex);
+            colorPopup.style.display = 'none';
+          });
+
+          presetsContainer.appendChild(optRow);
+        });
+
+        colorPopup.appendChild(presetsContainer);
+
+        const customBtn = document.createElement('button');
+        customBtn.type = 'button';
+        customBtn.className = 'color-popup-custom-btn';
+
+        const matchesPreset = colorOptions.some(opt => opt.hex.toLowerCase() === activeColorHex.toLowerCase());
+        if (!matchesPreset) {
+          customBtn.classList.add('active');
+          customBtn.innerHTML = `<span class="color-popup-dot" style="background-color: ${activeColorHex}"></span> <span class="color-popup-label">Custom (${activeColorHex})</span> <span class="color-popup-check">✓</span>`;
+        } else {
+          customBtn.classList.remove('active');
+          customBtn.innerHTML = '<span class="color-custom-icon">🎨</span> <span class="color-popup-label">Custom Color...</span>';
+        }
+
+        customBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          colorPopup.style.display = 'none';
+          hiddenColorInput.click();
+        });
+
+        colorPopup.appendChild(customBtn);
+      };
+
+      colorSwatch.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.structure-color-popup').forEach(p => {
+          if (p !== colorPopup) p.style.display = 'none';
+        });
+        const willOpen = colorPopup.style.display === 'none';
+        if (willOpen) {
+          renderColorPopup();
+          colorPopup.style.display = 'flex';
+        } else {
+          colorPopup.style.display = 'none';
+        }
+      });
+
+      colorContainer.appendChild(colorSwatch);
+      colorContainer.appendChild(hiddenColorInput);
+      colorContainer.appendChild(colorPopup);
+
+      cb.addEventListener('change', async (e) => {
+        e.stopPropagation();
+        const targetState = cb.checked;
+        if (this.meshManager.currentSkullType !== 'ohio') {
+          this.meshManager.skullSubstructures[struct.id].enabled = targetState;
+          await ensureOhioSkullMode();
+        }
+        cb.checked = targetState;
+        this.meshManager.setSkullSubstructureEnabled(struct.id, targetState);
+        updateButtonSummary();
+      });
+
+      itemRow.appendChild(leftContainer);
+      itemRow.appendChild(colorContainer);
+      list.appendChild(itemRow);
+    });
+
+    menu.appendChild(list);
+    widget.appendChild(menu);
+    container.appendChild(widget);
+
+    // Toggle menu open/close
+    const toggleMenu = (open) => {
+      const isOpen = open !== undefined ? open : (menu.style.display === 'none');
+      menu.style.display = isOpen ? 'block' : 'none';
+      toggleBtn.classList.toggle('active', isOpen);
+      arrow.textContent = isOpen ? '▴' : '▾';
+      if (!isOpen) {
+        document.querySelectorAll('.structure-color-popup').forEach(p => p.style.display = 'none');
+      }
+    };
+
+    toggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleMenu();
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!container.contains(e.target)) {
+        toggleMenu(false);
+      }
+      if (!e.target.closest('.multiselect-color-container')) {
+        document.querySelectorAll('.structure-color-popup').forEach(p => {
+          p.style.display = 'none';
+        });
+      }
+    });
+
+    // Quick action: All
+    allBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      for (const struct of SKULL_SUBSTRUCTURES) {
+        this.meshManager.skullSubstructures[struct.id].enabled = true;
+        if (checkboxes[struct.id]) checkboxes[struct.id].checked = true;
+      }
+      await ensureOhioSkullMode();
+      for (const struct of SKULL_SUBSTRUCTURES) {
+        this.meshManager.setSkullSubstructureEnabled(struct.id, true);
+      }
+      updateButtonSummary();
+    });
+
+    // Quick action: None
+    noneBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      for (const struct of SKULL_SUBSTRUCTURES) {
+        this.meshManager.skullSubstructures[struct.id].enabled = false;
+        if (checkboxes[struct.id]) checkboxes[struct.id].checked = false;
+      }
+      await ensureOhioSkullMode();
+      for (const struct of SKULL_SUBSTRUCTURES) {
+        this.meshManager.setSkullSubstructureEnabled(struct.id, false);
+      }
+      updateButtonSummary();
+    });
+
+    // Insert after anchorController
+    if (anchorController && anchorController.domElement) {
+      anchorController.domElement.insertAdjacentElement('afterend', container);
+    } else if (skullFolder && skullFolder.domElement) {
+      const children = skullFolder.domElement.querySelector('.children');
+      if (children) children.appendChild(container);
+      else skullFolder.domElement.appendChild(container);
+    }
+
+    this.skullSubstructuresWidget = {
+      container,
+      updateSummary: updateButtonSummary,
+      setCheckboxes: (enabledMap) => {
+        for (const id in enabledMap) {
+          if (checkboxes[id]) checkboxes[id].checked = !!enabledMap[id];
+        }
+        updateButtonSummary();
+      },
+      setColorInputs: (colorMap) => {
+        for (const id in colorMap) {
+          setBoneColor(id, colorMap[id]);
+        }
+      }
+    };
+  }
+
+
   setupCustomMeshControls(folder) {
     folder.children.slice().forEach((c) => c.destroy());
 
@@ -1878,6 +2471,504 @@ export class UIManager {
     if (!folder) return;
     folder.children.slice().forEach((c) => c.destroy());
 
+    // 1. Multiselect checklist for tract bundles
+    const container = document.createElement('div');
+    container.className = 'controller custom-multiselect-controller';
+
+    const nameLabel = document.createElement('div');
+    nameLabel.className = 'name';
+    nameLabel.textContent = 'Tracts';
+    nameLabel.title = 'Select neuroanatomical tractography bundles';
+    container.appendChild(nameLabel);
+
+    const widget = document.createElement('div');
+    widget.className = 'widget multiselect-widget';
+
+    const toggleBtn = document.createElement('button');
+    toggleBtn.type = 'button';
+    toggleBtn.className = 'multiselect-toggle-btn';
+
+    const btnText = document.createElement('span');
+    btnText.className = 'multiselect-btn-text';
+    btnText.textContent = 'None selected';
+
+    const arrow = document.createElement('span');
+    arrow.className = 'multiselect-arrow';
+    arrow.textContent = '▾';
+
+    toggleBtn.appendChild(btnText);
+    toggleBtn.appendChild(arrow);
+    widget.appendChild(toggleBtn);
+
+    const menu = document.createElement('div');
+    menu.className = 'multiselect-menu';
+    menu.style.display = 'none';
+
+    // Actions header (All / None quick toggle)
+    const actionsBar = document.createElement('div');
+    actionsBar.className = 'multiselect-actions';
+
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'multiselect-menu-title';
+    titleSpan.textContent = 'Tract Library';
+
+    const btnGroup = document.createElement('div');
+    btnGroup.className = 'multiselect-quick-btns';
+
+    const allBtn = document.createElement('button');
+    allBtn.type = 'button';
+    allBtn.className = 'multiselect-quick-btn';
+    allBtn.textContent = 'All';
+
+    const noneBtn = document.createElement('button');
+    noneBtn.type = 'button';
+    noneBtn.className = 'multiselect-quick-btn';
+    noneBtn.textContent = 'None';
+
+    btnGroup.appendChild(allBtn);
+    btnGroup.appendChild(noneBtn);
+    actionsBar.appendChild(titleSpan);
+    actionsBar.appendChild(btnGroup);
+    menu.appendChild(actionsBar);
+
+    // List of tract bundles
+    const list = document.createElement('div');
+    list.className = 'multiselect-list';
+
+    const checkboxes = {};
+    const badgeSpans = {};
+    const swatchDots = {};
+    const colorInputs = {};
+
+    const updateButtonSummary = () => {
+      if (!this.tractographyManager) return;
+      const allTracts = this.tractographyManager.getAllTracts();
+      const enabled = allTracts.filter(t => t.enabled);
+      if (enabled.length === 0) {
+        btnText.textContent = 'None selected';
+      } else if (enabled.length === allTracts.length) {
+        btnText.textContent = `All (${enabled.length}) active`;
+      } else if (enabled.length === 1) {
+        btnText.textContent = `${enabled[0].shortName || enabled[0].name}`;
+      } else {
+        const totalPts = this.tractographyManager.totalPoints;
+        const ptsStr = totalPts > 0 ? ` (${Math.round(totalPts / 1000)}k pts)` : '';
+        btnText.textContent = `${enabled.length} active${ptsStr}`;
+      }
+    };
+
+    const updateBadges = () => {
+      if (!this.tractographyManager) return;
+      for (const tract of this.tractographyManager.getAllTracts()) {
+        const badge = badgeSpans[tract.id];
+        if (!badge) continue;
+        if (tract.loading) {
+          badge.textContent = '⏳ loading...';
+          badge.className = 'multiselect-item-badge loading';
+        } else if (tract.loaded && tract.totalStreamlines > 0) {
+          const kFibers = (tract.totalStreamlines / 1000).toFixed(1);
+          badge.textContent = `${kFibers}k`;
+          badge.className = 'multiselect-item-badge';
+        } else {
+          badge.textContent = '';
+          badge.className = 'multiselect-item-badge';
+        }
+      }
+    };
+
+    const renderTractList = () => {
+      list.innerHTML = '';
+      if (!this.tractographyManager) return;
+
+      const allTracts = this.tractographyManager.getAllTracts();
+      let currentCat = null;
+      const catLabels = {
+        'projection': 'Projection Tracts',
+        'association': 'Association Tracts',
+        'commissural': 'Commissural Tracts',
+        'cranial': 'Cranial Nerves',
+        'custom': 'Custom Uploaded Tracts'
+      };
+
+      allTracts.forEach((tract, idx) => {
+        if (tract.category !== currentCat) {
+          currentCat = tract.category;
+          const groupHeader = document.createElement('div');
+          groupHeader.className = 'multiselect-group-header';
+          groupHeader.textContent = catLabels[currentCat] || tract.categoryName || currentCat;
+          list.appendChild(groupHeader);
+        }
+
+        const itemRow = document.createElement('div');
+        itemRow.className = 'multiselect-item';
+
+        const leftContainer = document.createElement('div');
+        leftContainer.className = 'multiselect-item-left';
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.className = 'multiselect-checkbox';
+        cb.id = `ms-check-tract-${tract.id}`;
+        cb.checked = Boolean(tract.enabled);
+        checkboxes[tract.id] = cb;
+
+        const labelText = document.createElement('label');
+        labelText.className = 'multiselect-item-text';
+        labelText.htmlFor = `ms-check-tract-${tract.id}`;
+        labelText.textContent = tract.shortName || tract.name;
+        labelText.title = tract.name;
+
+        const badgeSpan = document.createElement('span');
+        badgeSpan.className = 'multiselect-item-badge';
+        badgeSpans[tract.id] = badgeSpan;
+
+        labelText.appendChild(badgeSpan);
+        leftContainer.appendChild(cb);
+        leftContainer.appendChild(labelText);
+
+        // Color swatch and popover
+        const colorContainer = document.createElement('div');
+        colorContainer.className = 'multiselect-color-container';
+
+        const curColorHex = tract.colorHex || tract.defaultColorHex || '#38bdf8';
+
+        const colorSwatch = document.createElement('button');
+        colorSwatch.type = 'button';
+        colorSwatch.className = 'multiselect-color-swatch-btn';
+        colorSwatch.title = `Color for ${tract.name}`;
+
+        const swatchDot = document.createElement('span');
+        swatchDot.className = 'multiselect-swatch-dot';
+        swatchDot.style.backgroundColor = curColorHex;
+        swatchDots[tract.id] = swatchDot;
+
+        const swatchCaret = document.createElement('span');
+        swatchCaret.className = 'multiselect-swatch-caret';
+        swatchCaret.textContent = '▾';
+
+        colorSwatch.appendChild(swatchDot);
+        colorSwatch.appendChild(swatchCaret);
+
+        const hiddenColorInput = document.createElement('input');
+        hiddenColorInput.type = 'color';
+        hiddenColorInput.className = 'multiselect-hidden-color-input';
+        hiddenColorInput.value = curColorHex;
+        colorInputs[tract.id] = hiddenColorInput;
+
+        const setBundleColor = (colorHex) => {
+          swatchDot.style.backgroundColor = colorHex;
+          hiddenColorInput.value = colorHex;
+          this.tractographyManager.setTractColor(tract.id, colorHex);
+        };
+
+        hiddenColorInput.addEventListener('input', (e) => setBundleColor(e.target.value));
+        hiddenColorInput.addEventListener('change', (e) => setBundleColor(e.target.value));
+
+        const colorPopup = document.createElement('div');
+        colorPopup.className = 'structure-color-popup';
+        if (idx >= 6) colorPopup.classList.add('popup-upward');
+        colorPopup.style.display = 'none';
+
+        const renderColorPopup = () => {
+          colorPopup.innerHTML = '';
+          const popupHeader = document.createElement('div');
+          popupHeader.className = 'color-popup-header';
+          popupHeader.textContent = 'Bundle Color';
+          colorPopup.appendChild(popupHeader);
+
+          const presetsContainer = document.createElement('div');
+          presetsContainer.className = 'color-popup-presets';
+
+          const activeHex = tract.colorHex || tract.defaultColorHex || '#38bdf8';
+          const defaultHex = tract.defaultColorHex || '#38bdf8';
+
+          const colorOptions = [
+            { id: 'default', name: 'Default Bundle Color', hex: defaultHex },
+            { id: 'cyan', name: 'Cyan Highlight', hex: '#38bdf8' },
+            { id: 'yellow', name: 'Yellow Gold', hex: '#facc15' },
+            { id: 'emerald', name: 'Emerald Green', hex: '#10b981' },
+            { id: 'purple', name: 'Violet Purple', hex: '#a855f7' },
+            { id: 'rose', name: 'Rose Red', hex: '#f43f5e' }
+          ];
+
+          colorOptions.forEach(opt => {
+            const optRow = document.createElement('button');
+            optRow.type = 'button';
+            optRow.className = 'color-popup-option';
+            if (opt.hex.toLowerCase() === activeHex.toLowerCase()) optRow.classList.add('active');
+
+            const dot = document.createElement('span');
+            dot.className = 'color-popup-dot';
+            dot.style.backgroundColor = opt.hex;
+
+            const name = document.createElement('span');
+            name.className = 'color-popup-label';
+            name.textContent = opt.name;
+
+            optRow.appendChild(dot);
+            optRow.appendChild(name);
+
+            if (opt.hex.toLowerCase() === activeHex.toLowerCase()) {
+              const check = document.createElement('span');
+              check.className = 'color-popup-check';
+              check.textContent = '✓';
+              optRow.appendChild(check);
+            }
+
+            optRow.addEventListener('click', (e) => {
+              e.stopPropagation();
+              setBundleColor(opt.hex);
+              colorPopup.style.display = 'none';
+            });
+
+            presetsContainer.appendChild(optRow);
+          });
+
+          colorPopup.appendChild(presetsContainer);
+
+          const customBtn = document.createElement('button');
+          customBtn.type = 'button';
+          customBtn.className = 'color-popup-custom-btn';
+          customBtn.innerHTML = '<span class="color-custom-icon">🎨</span> <span class="color-popup-label">Custom Color...</span>';
+          customBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            colorPopup.style.display = 'none';
+            hiddenColorInput.click();
+          });
+          colorPopup.appendChild(customBtn);
+
+          // If custom tract, offer remove button
+          if (tract.category === 'custom') {
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'color-popup-custom-btn';
+            removeBtn.style.color = '#ef4444';
+            removeBtn.innerHTML = '<span>🗑️</span> <span class="color-popup-label">Delete Tract</span>';
+            removeBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              this.tractographyManager.removeCustomTract(tract.id);
+              renderTractList();
+              updateButtonSummary();
+              updateBadges();
+            });
+            colorPopup.appendChild(removeBtn);
+          }
+        };
+
+        colorSwatch.addEventListener('click', (e) => {
+          e.stopPropagation();
+          document.querySelectorAll('.structure-color-popup').forEach(p => {
+            if (p !== colorPopup) p.style.display = 'none';
+          });
+          const willOpen = (colorPopup.style.display === 'none');
+          if (willOpen) {
+            renderColorPopup();
+            colorPopup.style.display = 'flex';
+          } else {
+            colorPopup.style.display = 'none';
+          }
+        });
+
+        colorContainer.appendChild(colorSwatch);
+        colorContainer.appendChild(hiddenColorInput);
+        colorContainer.appendChild(colorPopup);
+
+        cb.addEventListener('change', async (e) => {
+          e.stopPropagation();
+          await this.tractographyManager.setTractEnabled(tract.id, cb.checked);
+          updateButtonSummary();
+          updateBadges();
+        });
+
+        itemRow.appendChild(leftContainer);
+        itemRow.appendChild(colorContainer);
+        list.appendChild(itemRow);
+      });
+    };
+
+    renderTractList();
+    updateButtonSummary();
+    updateBadges();
+
+    // Register manager update listener
+    this.tractographyManager.onUpdate(() => {
+      for (const tract of this.tractographyManager.getAllTracts()) {
+        if (checkboxes[tract.id]) {
+          checkboxes[tract.id].checked = Boolean(tract.enabled);
+        }
+      }
+      updateButtonSummary();
+      updateBadges();
+    });
+
+    menu.appendChild(list);
+    widget.appendChild(menu);
+    container.appendChild(widget);
+
+    // Toggle menu open/close
+    const toggleMenu = (open) => {
+      const isOpen = open !== undefined ? open : (menu.style.display === 'none');
+      menu.style.display = isOpen ? 'block' : 'none';
+      toggleBtn.classList.toggle('active', isOpen);
+      arrow.textContent = isOpen ? '▴' : '▾';
+      if (!isOpen) {
+        document.querySelectorAll('.structure-color-popup').forEach(p => p.style.display = 'none');
+      }
+    };
+
+    toggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleMenu();
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!container.contains(e.target)) {
+        toggleMenu(false);
+      }
+      if (!e.target.closest('.multiselect-color-container')) {
+        document.querySelectorAll('.structure-color-popup').forEach(p => p.style.display = 'none');
+      }
+    });
+
+    // Quick action: All
+    allBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      allBtn.disabled = true;
+      allBtn.textContent = '...';
+      await this.tractographyManager.enableAllTracts();
+      allBtn.disabled = false;
+      allBtn.textContent = 'All';
+      for (const tract of this.tractographyManager.getAllTracts()) {
+        if (checkboxes[tract.id]) checkboxes[tract.id].checked = true;
+      }
+      updateButtonSummary();
+      updateBadges();
+    });
+
+    // Quick action: None
+    noneBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.tractographyManager.disableAllTracts();
+      for (const tract of this.tractographyManager.getAllTracts()) {
+        if (checkboxes[tract.id]) checkboxes[tract.id].checked = false;
+      }
+      updateButtonSummary();
+      updateBadges();
+    });
+
+    // Append multiselect to folder
+    const folderChildren = folder.domElement.querySelector('.children') || folder.domElement;
+    folderChildren.appendChild(container);
+
+    // 2. Global controls in Lil-GUI
+    this.tractVisController = makeBold(folder.add(this.tractographyManager, 'visible').name('Visible')).onChange((v) => {
+      this.setTractsVisible(v);
+    });
+
+    folder.add(this.tractographyManager, 'clipTracts').name('Multi-Plane Clipping').onChange((v) => {
+      this.tractographyManager.setClipTracts(v);
+    });
+
+    let solidColorCtrl = null;
+    let colormapCtrl = null;
+    let metricCtrl = null;
+    let minCtrl = null;
+    let maxCtrl = null;
+    let ditherCtrl = null;
+
+    const updateCtrlVisibility = () => {
+      const mode = this.tractographyManager.colorMode;
+      const isSolid = (mode === 'solid');
+      const isColormap = (mode === 'colormap' || mode === 'orientation');
+      const isRgb = (this.tractographyManager.colormap === 'rgb');
+
+      if (solidColorCtrl) solidColorCtrl.show(isSolid);
+      if (colormapCtrl) colormapCtrl.show(isColormap);
+      if (metricCtrl) metricCtrl.show(isColormap && !isRgb);
+      const showContrast = isColormap;
+      if (minCtrl) minCtrl.show(showContrast);
+      if (maxCtrl) maxCtrl.show(showContrast);
+      if (ditherCtrl) ditherCtrl.show(showContrast);
+    };
+
+    folder.add(this.tractographyManager, 'colorMode', {
+      'Colormap / Directional': 'colormap',
+      'Solid Color': 'solid'
+    }).name('Color Mode').onChange((mode) => {
+      this.tractographyManager.setColorMode(mode);
+      updateCtrlVisibility();
+    });
+
+    solidColorCtrl = folder.addColor(this.tractographyManager, 'solidColor').name('Solid Color').onChange((hex) => {
+      this.tractographyManager.setSolidColor(hex);
+    });
+
+    colormapCtrl = folder.add(this.tractographyManager, 'colormap', {
+      'RGB': 'rgb',
+      'Rocket': 'rocket',
+      'Turbo': 'turbo',
+      'Viridis': 'viridis',
+      'Plasma': 'plasma',
+      'Inferno': 'inferno',
+      'Magma': 'magma',
+      'Cividis': 'cividis',
+      'Cool-Warm': 'coolwarm',
+      'Rainbow (Jet)': 'rainbow',
+      'Hot': 'hot',
+      'Cool': 'cool',
+      'Red-Yellow': 'red_yellow',
+      'Winters': 'winters',
+      'Grayscale': 'grayscale',
+      'ACTC': 'actc'
+    }).name('Colormap').onChange((cm) => {
+      this.tractographyManager.setColormap(cm);
+      updateCtrlVisibility();
+    });
+
+    metricCtrl = folder.add(this.tractographyManager, 'colormapMetric', {
+      'Principal Direction (LR → AP → IS)': 'principal',
+      'Inferior - Superior (Z)': 'is',
+      'Anterior - Posterior (Y)': 'ap',
+      'Left - Right (X)': 'lr',
+      'Elevation Angle (Vertical/Horizontal)': 'angle',
+      'Streamline Length': 'length'
+    }).name('Gradient Metric').onChange((m) => {
+      this.tractographyManager.setColormapMetric(m);
+    });
+
+    minCtrl = folder.add(this.tractographyManager, 'contrastMin', 0.0, 1.0, 0.01).name('Colormap Min').onChange((v) => {
+      this.tractographyManager.setContrastMin(v);
+    });
+
+    maxCtrl = folder.add(this.tractographyManager, 'contrastMax', 0.0, 1.0, 0.01).name('Colormap Max').onChange((v) => {
+      this.tractographyManager.setContrastMax(v);
+    });
+
+    ditherCtrl = folder.add(this.tractographyManager, 'dither', 0.0, 0.8, 0.05).name('Fiber Dithering').onChange((v) => {
+      this.tractographyManager.setDither(v);
+    });
+
+    updateCtrlVisibility();
+
+    folder.add(this.tractographyManager, 'opacity', 0.05, 1.0, 0.05).name('Opacity').onChange((v) => {
+      this.tractographyManager.setOpacity(v);
+    });
+
+    folder.add(this.tractographyManager, 'lineWidth', 1.0, 10.0, 0.5).name('Fiber Width').onChange((w) => {
+      this.tractographyManager.setLineWidth(w);
+    });
+
+    folder.add(this.tractographyManager, 'subsample', {
+      '10% (Default - Fast)': 10,
+      '25% (Medium)': 4,
+      '50% (Dense)': 2,
+      '100% (All Streamlines)': 1
+    }).name('Fiber Density').onChange((sub) => {
+      this.tractographyManager.setSubsample(parseInt(sub, 10));
+    });
+
+    // Custom TRK upload trigger
     const fileTrigger = {
       chooseFile: () => {
         const input = document.createElement('input');
@@ -1889,7 +2980,9 @@ export class UIManager {
             const name = f.name.toLowerCase();
             if (name.endsWith('.trk') || name.endsWith('.trk.gz') || name.endsWith('.gz')) {
               await this.tractographyManager.loadTRKFromFile(f);
-              this.setupTractographyControls(folder);
+              renderTractList();
+              updateButtonSummary();
+              updateBadges();
               this.switchTab('meshes');
               folder.open();
             } else {
@@ -1901,123 +2994,16 @@ export class UIManager {
       }
     };
 
-    folder.add(fileTrigger, 'chooseFile').name('📁 Load .trk / .trk.gz Tractography');
+    folder.add(fileTrigger, 'chooseFile').name('📁 Load Custom .trk / .trk.gz');
 
-    if (this.tractographyManager && this.tractographyManager.hasTracts) {
-      folder.add({ name: this.tractographyManager.fileName }, 'name').name('File').listen().disable();
-      folder.add({
-        counts: `${this.tractographyManager.totalStreamlines.toLocaleString()} fibers (${Math.round(this.tractographyManager.totalPoints / 1000)}k pts)`
-      }, 'counts').name('Streamlines').listen().disable();
-
-      folder.add(this.tractographyManager, 'visible').name('Visible').onChange((v) => {
-        this.tractographyManager.setVisible(v);
-      });
-
-      folder.add(this.tractographyManager, 'clipTracts').name('Multi-Plane Clipping').onChange((v) => {
-        this.tractographyManager.setClipTracts(v);
-      });
-
-      let solidColorCtrl = null;
-      let colormapCtrl = null;
-      let metricCtrl = null;
-      let minCtrl = null;
-      let maxCtrl = null;
-      let ditherCtrl = null;
-
-      const updateCtrlVisibility = (mode) => {
-        if (solidColorCtrl) solidColorCtrl.show(mode === 'solid');
-        const isColormap = (mode === 'colormap');
-        if (colormapCtrl) colormapCtrl.show(isColormap);
-        if (metricCtrl) metricCtrl.show(isColormap);
-        const showContrast = (mode === 'orientation' || mode === 'colormap');
-        if (minCtrl) minCtrl.show(showContrast);
-        if (maxCtrl) maxCtrl.show(showContrast);
-        if (ditherCtrl) ditherCtrl.show(showContrast);
-      };
-
-      folder.add(this.tractographyManager, 'colorMode', {
-        'Orientation (Surf-Ice RGB)': 'orientation',
-        'Colormap Gradient': 'colormap',
-        'Solid Color': 'solid'
-      }).name('Color Mode').onChange((mode) => {
-        this.tractographyManager.setColorMode(mode);
-        updateCtrlVisibility(mode);
-      });
-
-      solidColorCtrl = folder.addColor(this.tractographyManager, 'solidColor').name('Solid Color').onChange((hex) => {
-        this.tractographyManager.setSolidColor(hex);
-      });
-
-      colormapCtrl = folder.add(this.tractographyManager, 'colormap', {
-        'Turbo': 'turbo',
-        'Viridis': 'viridis',
-        'Plasma': 'plasma',
-        'Inferno': 'inferno',
-        'CoolWarm': 'coolwarm',
-        'Rainbow (Jet)': 'rainbow',
-        'Hot': 'hot',
-        'Cool': 'cool',
-        'Red-Yellow': 'red_yellow',
-        'Winters': 'winters'
-      }).name('Colormap').onChange((cm) => {
-        this.tractographyManager.setColormap(cm);
-      });
-
-      metricCtrl = folder.add(this.tractographyManager, 'colormapMetric', {
-        'Elevation Angle (Vertical/Horizontal)': 'angle',
-        'Inferior - Superior (Z)': 'is',
-        'Anterior - Posterior (Y)': 'ap',
-        'Left - Right (X)': 'lr',
-        'Streamline Length': 'length'
-      }).name('Gradient Metric').onChange((m) => {
-        this.tractographyManager.setColormapMetric(m);
-      });
-
-      minCtrl = folder.add(this.tractographyManager, 'contrastMin', 0.0, 1.0, 0.01).name('Colormap Min').onChange((v) => {
-        this.tractographyManager.setContrastMin(v);
-      });
-
-      maxCtrl = folder.add(this.tractographyManager, 'contrastMax', 0.0, 1.0, 0.01).name('Colormap Max').onChange((v) => {
-        this.tractographyManager.setContrastMax(v);
-      });
-
-      ditherCtrl = folder.add(this.tractographyManager, 'dither', 0.0, 0.8, 0.05).name('Fiber Dithering').onChange((v) => {
-        this.tractographyManager.setDither(v);
-      });
-
-      updateCtrlVisibility(this.tractographyManager.colorMode);
-
-      folder.add(this.tractographyManager, 'opacity', 0.05, 1.0, 0.05).name('Opacity').onChange((v) => {
-        this.tractographyManager.setOpacity(v);
-      });
-
-      folder.add(this.tractographyManager, 'lineWidth', 1.0, 10.0, 0.5).name('Fiber Width').onChange((w) => {
-        this.tractographyManager.setLineWidth(w);
-      });
-
-      folder.add(this.tractographyManager, 'subsample', {
-        '100% (All Streamlines)': 1,
-        '50% (Every 2nd fiber)': 2,
-        '25% (Every 4th fiber)': 4,
-        '10% (Every 10th fiber)': 10
-      }).name('Fiber Density').onChange((sub) => {
-        this.tractographyManager.setSubsample(parseInt(sub, 10));
-      });
-
-      folder.add({
-        remove: () => {
-          this.tractographyManager.clear();
-          this.setupTractographyControls(folder);
-        }
-      }, 'remove').name('❌ Remove Tractography');
-
-      folder.open();
-      setTimeout(() => {
-        if (folder.domElement) {
-          folder.domElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-      }, 60);
-    }
+    folder.add({
+      clearAll: () => {
+        this.tractographyManager.clear();
+        renderTractList();
+        updateButtonSummary();
+        updateBadges();
+      }
+    }, 'clearAll').name('❌ Clear All Tracts');
   }
 
   rebuildCustomMeshesFolder() {
@@ -2124,11 +3110,19 @@ export class UIManager {
           this.setArterialVisible(!this.meshManager.arterialVisible);
           this.switchTab('meshes');
           break;
+        case 'd':
+          this.setDuralFoldsVisible(!this.meshManager.duralFoldsVisible);
+          this.switchTab('meshes');
+          break;
+
         case 'm':
           if (this.multiplanarViewer) this.multiplanarViewer.toggle();
           break;
         case 't':
-          this.setTheme(this.themeMode === 'dark' ? 'white' : 'dark');
+          if (this.tractographyManager) {
+            this.setTractsVisible(!this.tractographyManager.visible);
+            this.switchTab('meshes');
+          }
           break;
         case 'r':
           this.viewer.resetCamera();

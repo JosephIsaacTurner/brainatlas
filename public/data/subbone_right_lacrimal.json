@@ -1,0 +1,30 @@
+{
+  "name": "subbone_right_lacrimal",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/data/output/OhioOnJagakeSkull/substructures/right_lacrimal.obj",
+  "vertexCount": 1855,
+  "triangleCount": 3714,
+  "bounds": {
+    "min": [
+      7.909469,
+      34.3909,
+      -79.812225
+    ],
+    "max": [
+      23.443497,
+      66.060974,
+      -30.099987
+    ],
+    "center": [
+      15.676483000000001,
+      50.225937,
+      -54.956106
+    ],
+    "size": [
+      15.534028000000001,
+      31.670074,
+      49.712238
+    ]
+  },
+  "rawBytes": 89104,
+  "compressedBytes": 54802
+}

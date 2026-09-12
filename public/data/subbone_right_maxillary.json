@@ -1,0 +1,30 @@
+{
+  "name": "subbone_right_maxillary",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/data/output/OhioOnJagakeSkull/substructures/right_maxillary.obj",
+  "vertexCount": 30039,
+  "triangleCount": 60078,
+  "bounds": {
+    "min": [
+      -6.433489,
+      10.245245,
+      -126.563126
+    ],
+    "max": [
+      54.815689,
+      76.512718,
+      -33.396061
+    ],
+    "center": [
+      24.1911,
+      43.3789815,
+      -79.9795935
+    ],
+    "size": [
+      61.249178,
+      66.26747300000001,
+      93.167065
+    ]
+  },
+  "rawBytes": 1441888,
+  "compressedBytes": 866595
+}

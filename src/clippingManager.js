@@ -441,8 +441,16 @@ export class ClippingManager {
         if (p.sliceQuad) p.sliceQuad.visible = false;
         if (p.helper) p.helper.visible = false;
       }
+      for (const cb of this.updateCallbacks) {
+        try {
+          cb();
+        } catch (err) {
+          console.error('Clipping update callback error:', err);
+        }
+      }
       return;
     }
+
 
     this.clipUniforms.uGlobalClipEnabled.value = true;
 

@@ -1,0 +1,30 @@
+{
+  "name": "subbone_left_temporal",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/data/output/OhioOnJagakeSkull/substructures/left_temporal.obj",
+  "vertexCount": 20803,
+  "triangleCount": 41622,
+  "bounds": {
+    "min": [
+      -75.465965,
+      -78.530693,
+      -88.870888
+    ],
+    "max": [
+      -11.987625,
+      29.691393,
+      3.735736
+    ],
+    "center": [
+      -43.726794999999996,
+      -24.419649999999997,
+      -42.567575999999995
+    ],
+    "size": [
+      63.478339999999996,
+      108.222086,
+      92.606624
+    ]
+  },
+  "rawBytes": 998752,
+  "compressedBytes": 597208
+}

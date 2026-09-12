@@ -1,0 +1,30 @@
+{
+  "name": "subbone_right_inferior_nasal_concha",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/data/output/OhioOnJagakeSkull/substructures/right_inferior_nasal_concha.obj",
+  "vertexCount": 31722,
+  "triangleCount": 11464,
+  "bounds": {
+    "min": [
+      10.64852905,
+      18.44252777,
+      -85.01422119
+    ],
+    "max": [
+      17.68523788,
+      61.67033768,
+      -68.42858887
+    ],
+    "center": [
+      14.166883465,
+      40.056432725,
+      -76.72140503
+    ],
+    "size": [
+      7.0367088299999985,
+      43.227809910000005,
+      16.585632320000002
+    ]
+  },
+  "rawBytes": 898912,
+  "compressedBytes": 314525
+}

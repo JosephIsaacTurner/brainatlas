@@ -1,0 +1,30 @@
+{
+  "name": "subbone_sphenoid",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/data/output/OhioOnJagakeSkull/substructures/sphenoid.obj",
+  "vertexCount": 43979,
+  "triangleCount": 88089,
+  "bounds": {
+    "min": [
+      -61.362732,
+      -18.612991,
+      -93.950798
+    ],
+    "max": [
+      69.651878,
+      46.542362,
+      -1.467916
+    ],
+    "center": [
+      4.144572999999998,
+      13.964685499999998,
+      -47.709357000000004
+    ],
+    "size": [
+      131.01461,
+      65.15535299999999,
+      92.482882
+    ]
+  },
+  "rawBytes": 2112580,
+  "compressedBytes": 1278727
+}

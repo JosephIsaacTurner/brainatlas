@@ -1,0 +1,30 @@
+{
+  "name": "subbone_occipital",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/data/output/OhioOnJagakeSkull/substructures/occipital.obj",
+  "vertexCount": 40291,
+  "triangleCount": 80580,
+  "bounds": {
+    "min": [
+      -58.786732,
+      -114.684563,
+      -80.238327
+    ],
+    "max": [
+      61.351868,
+      -5.87073,
+      51.348507
+    ],
+    "center": [
+      1.2825680000000013,
+      -60.277646499999996,
+      -14.44491
+    ],
+    "size": [
+      120.1386,
+      108.813833,
+      131.586834
+    ]
+  },
+  "rawBytes": 1933960,
+  "compressedBytes": 1159605
+}

@@ -15,16 +15,19 @@ import {
   SKIN_OBJ_PATH,
   ARTERIAL_OBJ_PATH,
   VENOUS_OBJ_PATH,
+  DURAL_FOLDS_OBJ_PATH,
   VOLUME_NII_PATH,
   VOLUME_T1_PATH,
   VOLUME_T2_PATH,
   VOLUME_CT_PATH,
   VOLUME_FLASH25_PATH,
   VOLUME_MNI_PATH,
+  VOLUME_BIGBRAIN_PATH,
   VOLUME_TISSUE_PATH,
   VOLUME_STRUCTURE_PATH,
   VOLUME_SUBSTRUCTURE_PATH,
-  BRAIN_STRUCTURE_CONFIGS
+  BRAIN_STRUCTURE_CONFIGS,
+  SKULL_SUBSTRUCTURE_CONFIGS
 } from './build_cache.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -41,6 +44,7 @@ export function checkAndAutoUpdateVolumeCache(requestedKey = null) {
     { key: 'volume_ct', path: VOLUME_CT_PATH },
     { key: 'volume_flash25', path: VOLUME_FLASH25_PATH },
     { key: 'volume_mni152', path: VOLUME_MNI_PATH },
+    { key: 'volume_bigbrain', path: VOLUME_BIGBRAIN_PATH },
     { key: 'volume_tissue', path: VOLUME_TISSUE_PATH },
     { key: 'volume_structure', path: VOLUME_STRUCTURE_PATH },
     { key: 'volume_substructure', path: VOLUME_SUBSTRUCTURE_PATH }
@@ -80,7 +84,11 @@ function ensureCache() {
   processOBJ('skin', SKIN_OBJ_PATH);
   processOBJ('arterial', ARTERIAL_OBJ_PATH);
   processOBJ('venous', VENOUS_OBJ_PATH);
+  processOBJ('dural_folds', DURAL_FOLDS_OBJ_PATH);
   for (const s of BRAIN_STRUCTURE_CONFIGS) {
+    processOBJ(s.cacheKey, s.path);
+  }
+  for (const s of SKULL_SUBSTRUCTURE_CONFIGS) {
     processOBJ(s.cacheKey, s.path);
   }
 
@@ -256,6 +264,10 @@ const server = http.createServer((req, res) => {
     '/api/metadata/arterial': 'arterial.json',
     '/api/binary/venous': 'venous.bin.gz',
     '/api/metadata/venous': 'venous.json',
+    '/api/binary/dural_folds': 'dural_folds.bin.gz',
+    '/api/metadata/dural_folds': 'dural_folds.json',
+    '/api/binary/volume_bigbrain': 'volume_bigbrain.bin.gz',
+    '/api/metadata/volume_bigbrain': 'volume_bigbrain.json',
     '/api/binary/mask_brain': 'mask_brain.bin.gz',
     '/api/metadata/mask_brain': 'mask_brain.json',
     '/api/binary/mask_skull': 'mask_skull.bin.gz',
@@ -269,9 +281,20 @@ const server = http.createServer((req, res) => {
     binaryRoutes[`/api/metadata/${s.cacheKey}`] = `${s.cacheKey}.json`;
   }
 
+  for (const s of SKULL_SUBSTRUCTURE_CONFIGS) {
+    binaryRoutes[`/api/binary/${s.cacheKey}`] = `${s.cacheKey}.bin.gz`;
+    binaryRoutes[`/api/metadata/${s.cacheKey}`] = `${s.cacheKey}.json`;
+  }
+
   if (pathname === '/api/brain_structures') {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
     res.end(JSON.stringify(BRAIN_STRUCTURE_CONFIGS, null, 2));
+    return;
+  }
+
+  if (pathname === '/api/skull_substructures') {
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify(SKULL_SUBSTRUCTURE_CONFIGS, null, 2));
     return;
   }
 
@@ -297,6 +320,7 @@ const server = http.createServer((req, res) => {
     '/api/raw/skin.obj': SKIN_OBJ_PATH,
     '/api/raw/arterial.obj': ARTERIAL_OBJ_PATH,
     '/api/raw/venous.obj': VENOUS_OBJ_PATH,
+    '/api/raw/dural_folds.obj': DURAL_FOLDS_OBJ_PATH,
     '/api/raw/volume.nii.gz': VOLUME_NII_PATH,
     '/api/raw/volume_t1.nii.gz': VOLUME_T1_PATH,
     '/api/raw/volume_t2.nii.gz': VOLUME_T2_PATH,
@@ -304,6 +328,8 @@ const server = http.createServer((req, res) => {
     '/api/raw/volume_flash25.nii.gz': VOLUME_FLASH25_PATH,
     '/api/raw/volume_mni152.nii': VOLUME_MNI_PATH,
     '/api/raw/volume_mni152.nii.gz': VOLUME_MNI_PATH,
+    '/api/raw/volume_bigbrain.nii': VOLUME_BIGBRAIN_PATH,
+    '/api/raw/volume_bigbrain.nii.gz': VOLUME_BIGBRAIN_PATH,
     '/api/raw/volume_tissue.nii.gz': VOLUME_TISSUE_PATH,
     '/api/raw/volume_structure.nii.gz': VOLUME_STRUCTURE_PATH,
     '/api/raw/volume_substructure.nii.gz': VOLUME_SUBSTRUCTURE_PATH,
@@ -322,6 +348,10 @@ const server = http.createServer((req, res) => {
   };
 
   for (const s of BRAIN_STRUCTURE_CONFIGS) {
+    rawRoutes[`/api/raw/${s.file}`] = s.path;
+  }
+
+  for (const s of SKULL_SUBSTRUCTURE_CONFIGS) {
     rawRoutes[`/api/raw/${s.file}`] = s.path;
   }
 

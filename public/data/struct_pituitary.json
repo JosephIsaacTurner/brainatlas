@@ -1,0 +1,30 @@
+{
+  "name": "struct_pituitary",
+  "sourcePath": "/Users/jiturner/Downloads/pituitary_v2.obj",
+  "vertexCount": 1435,
+  "triangleCount": 2866,
+  "bounds": {
+    "min": [
+      -4.582374573,
+      -2.930450439,
+      -35.24959183
+    ],
+    "max": [
+      5.940414429,
+      6.949966431,
+      -18.25375748
+    ],
+    "center": [
+      0.6790199279999998,
+      2.0097579960000003,
+      -26.751674655000002
+    ],
+    "size": [
+      10.522789002,
+      9.88041687,
+      16.99583435
+    ]
+  },
+  "rawBytes": 68848,
+  "compressedBytes": 37743
+}

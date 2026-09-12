@@ -1,4 +1,150 @@
 New Request: Completed. [x]
+[x] Replace the current arterial mesh with this new one that I've improved even more: /Users/jiturner/Repositories/Standard/UBA167/manually_refined_again.obj
+  - Updated `ARTERIAL_OBJ_PATH` to `/Users/jiturner/Repositories/Standard/UBA167/manually_refined_again.obj` in `build_cache.mjs`.
+  - Backed up raw mesh to `public/data/raw/arterial.obj`.
+  - Re-cached `public/data/arterial.bin.gz` (998 KB, 33,927 vertices, 67,824 triangles) and `public/data/arterial.json`.
+[x] Commit all latest changes, push to github, update the github pages deployment.
+  - Staged all changes and untracked binary/data assets.
+  - Committed with clear descriptive message, pushed to `origin main`.
+  - Triggered automatic GitHub Pages deployment workflow.
+
+New Request: Completed. [x]
+[x] Make the left-hand clipping/slicing menue defaulted to open on initial page load, including the Plane 1/Plan 2/Plane 3 submenus open.
+  - In `src/ui.js` `initClippingGUI()`, removed the initial `.close()` call on each plane folder and called `.open()` on `pFolder` for Plane 1, Plane 2, and Plane 3.
+  - Called `this.clipGui.open()` to ensure the root left-side clipping/slicing panel is fully expanded on initial page load.
+[x] Bottom left under orientation cube should be checkbox for "Turntable Spin" (default off); if you turn it on, another element should appear to let you control rate of spin (seconds per full rotation). 
+  - Added `#turntable-panel` directly under the anatomical orientation cube with a "Turntable Spin" checkbox (default unchecked).
+  - Integrated dynamic rate control element that appears when "Turntable Spin" is checked, featuring a numeric input and synchronized range slider for controlling seconds per full rotation (from 1 to 300s, default 20s / rot).
+  - In `src/viewer.js`, initialized `THREE.Clock()` and integrated `setTurntableSpin(enabled, secondsPerRotation)` and `setTurntableSpeed(secondsPerRotation)` updating `controls.autoRotate` and `controls.autoRotateSpeed = 60.0 / sec`, updating camera rotation smoothly across the vertical turntable axis with orientation cube synchronization.
+  - Positioned bottom-left elements vertically aligned with comfortable spacing: Turntable controls at `bottom: 14px`, orientation cube at `bottom: 92px`, and Multiplanar Slice Viewer toggle at `bottom: 210px`.
+[x] For our additional brain structures menue, we want to add another option: Pituitary (/Users/jiturner/Downloads/pituitary_v2.obj)
+  - Processed `/Users/jiturner/Downloads/pituitary_v2.obj` and backed up the raw mesh to `public/data/raw/pituitary_v2.obj`.
+  - Generated pre-cached binary files `public/data/struct_pituitary.bin.gz` (37.7 KB, 1435 vertices, 2866 triangles) and `public/data/struct_pituitary.json` with exact MNI bounds centered in the sella turcica.
+  - Added `pituitary` to `ADDITIONAL_BRAIN_STRUCTURES` in `src/meshManager.js` and `build_cache.mjs` (default color `#ec4899`), integrating into the multiselect checklist, color pickers, material rendering, clipping, and overlay sampling.
+
+
+New Request: Completed. [x]
+[x] Bug: After some recent changes, the "Show Imaging Slice" isn't actually showing the volumetric slices at all anymore. Not sure what happened
+  - Diagnosed root cause: `src/shaders/sliceShader.js` had `applyColormap()` defined before `colormapRocket()` and `colormapViridis()`. Because GLSL requires functions to be declared or defined before invocation, WebGL fragment shader compilation failed silently, preventing Three.js from rendering any slice quad meshes.
+  - Reordered function definitions in `src/shaders/sliceShader.js` so that `applyColormap()` and `applyOverlayColormap()` are positioned after all colormap implementations (`colormapRocket`, `colormapViridis`, etc.), restoring full volumetric slice quad rendering across all clipping planes.
+[x] We should make the "Sub-bones" menu available even when using "Full Skull", but as soon as people start trying to disable or enable only certain subbones, it natively switches to the Ohio skull (and this change would be reflected in the dropdown menu). That way the sub-bones menu appears without people knowing they haev to select the ohio skull in particular. If people then try to switch back from Ohio back to Full Skull, then it would switch back to the monolithic full skull and enable all sub-bones of course. 
+  - Kept the "Sub-bones" multiselect widget displayed (`display: flex`) unconditionally inside the Skull menu so it is always accessible even when "Full Skull (MNI Warped)" is active.
+  - Implemented `ensureOhioSkullMode()`: when a user unchecks/checks any sub-bone or clicks "All" / "None" in the Sub-bones menu while on Full Skull, `this.skullModelController.setValue('ohio')` natively switches the skull model to "Ohio Skull (MNI Warped)" and updates the lil-gui dropdown accordingly.
+  - When switching back from Ohio to "Full Skull", `MeshManager.switchSkull('full')` restores the monolithic full skull mesh, hides all individual sub-bone meshes, and re-enables all 22 sub-bones.
+  - Added `refreshSkullSubstructures()` to re-check all sub-bone checkboxes and update the summary button text to "All (22) selected" whenever returning to Full Skull.
+[x] On initial load, the "Tracts" should not be toggled on.
+  - Set `this.visible = false` on initial load in `src/tractographyManager.js`.
+  - Removed initial `active` class from `#btn-toggle-tracts` and `#ind-tracts` in `src/ui.js`, so Tracts initializes un-toggled while keeping background loading of default cranial nerves intact for instant toggle-on.
+
+New Request: Completed. [x]
+Great job, now just some quick adjustments
+[x] Its redundant to have the sub-parts of the Corpus Callosum as well as the full CC. Just have the sub-parts, not displaying the full CC. 
+  - Removed `cc_full` (`CC.trk.gz`) from `BUILTIN_TRACTS` in `src/tractographyManager.js`. Preserved the 3 sub-parts: Anterior / Genu (`CC_ant.trk.gz`), Body (`CC_mid.trk.gz`), and Posterior / Splenium (`CC_post.trk.gz`).
+[x] In the top center bar, we should have a master toggle for tractography. Have it by default turn on all cranial nerves, and have the other tracts off by default. Then you can turn on/off the other tracts as you want.
+  - Added `#btn-toggle-tracts` (`title="Toggle Tractography (T)"`) in top toolbar Row 2 alongside Brain, Skull, Soft Tissue, Arterial, Venous, Ventricles, and Dural Folds. Configured active by default with indicator dot.
+  - Set default built-in tract state: all 14 Cranial Nerve bundles default to `enabled: true`, and all other projection, association, and commissural tracts default to `enabled: false`.
+  - Added `TractographyManager.initDefaultTracts()` called automatically on application startup in `src/main.js` to stream and render cranial nerves in the background.
+  - Added `setTractsVisible(visible)` and wired up 'T' keyboard shortcut. If toggled ON when 0 tracts are enabled, it re-enables the default cranial nerves.
+[x] We should be thoughtful in which parts of the menu are by default open and collapsed. I think some things seem to default to be open that shouldn't be. Honestly, I think everything in the right menu should default to collapsed on initial load. Then, if you open for example "Brain Mesh" sub-menu, it should keep the "Surf Ice Velvet Shading" sub-submenu closed until that is also open. Leave things open if people open them until they are closed intentionally.
+  - Set all top-level folders and subfolders in the right sidebar GUI to collapsed on initial load (`.close()` called on `brainFolder`, `velvetFolder`, `skullFolder`, `skinFolder`, `arterialFolder`, `venousFolder`, `ventFolder`, `duralFolder`, `tractographyFolder`, `customMeshFolder`, `envFolder`, `volFolder`, `pFolder`, and overlay folders).
+  - Removed auto-open triggers in `TractographyManager.onLoaded` so the tractography menu does not force itself open on background load.
+  - Nested sub-folders (such as "Brain Velvet Shader Style", clipping plane folders, positive/negative overlay sub-folders) stay collapsed even when their parent folder is opened, remaining open only if the user explicitly opens them.
+Some things to rename in the GUI:
+[x] "Brain Mesh" -> "Brain"
+  - Renamed `this.meshGui.addFolder('🧠 Brain')`.
+[x] "Skull Mesh" -> "Skull"
+  - Renamed `this.meshGui.addFolder('💀 Skull')`.
+[x] "Soft Tissue Mesh" -> "Soft Tissue"
+  - Renamed `this.meshGui.addFolder('👤 Soft Tissue')`.
+[x] "Surf Ice Velvet Shading" -> Brain Velvet Shader Style (don't refer to Surf-Ice anymore)
+  - Renamed `brainFolder.addFolder('✨ Brain Velvet Shader Style')`.
+[x] "Ventricle Mask" -> "Ventricles"
+  - Renamed `this.meshGui.addFolder('💧 Ventricles')`.
+[x] "ACTC (Surf-Ice) -> "ACTC"
+  - Renamed in overlay colormap dropdowns in `src/ui.js` and removed references across codebase.
+[x] Tractography should be listed higher in the menu than "Custom Meshes". 
+  - Reordered folders in `initMeshGUI()`: `this.tractographyFolder` is now created directly above `this.customMeshFolder`.
+[x] Within tractography visualization settings, don't call it "Surf-Ice RGB", just call it "RGB". 
+  - Renamed option to `'RGB': 'rgb'` and updated Principal Direction metric to `'Principal Direction (LR → AP → IS)'`.
+We want to review our colormaps for nifti overlays as well as tractography. 
+[x] Could we make the RGB style we've been using on tractography a colormap option for tractography, that way we can elliminate the Color Mode orientation option as it would be the same as selecting Colormap Gradient -> Gradient Metric: Orientation -> "RGB" colormap. 
+  - Eliminated separate "Orientation" mode from `Color Mode` in favor of `'Colormap / Directional'` vs `'Solid Color'`.
+  - Added `'RGB': 'rgb'` as the first and default colormap option in tractography.
+  - In `TractographyManager.computeColorsForTract()`, when `colormap === 'rgb'`, it directly calculates the 3D directional vector `(dx/len, dy/len, dz/len)` with contrast stretching and fiber dithering.
+  - In `src/ui.js`, when `colormap === 'rgb'`, the scalar gradient metric dropdown is dynamically hidden since RGB represents an intrinsic 3-vector.
+[x] Can we check throughout our perceptually uniform color scales for tractography that they are indeed what we say they are? Viridis for example has looked a bit odd on tractography. 
+  - Diagnosed that `src/colormaps.js` was previously using a crude 3rd-order polynomial with >27% error, causing Viridis to peak at a dull greenish-cyan rather than bright yellow.
+  - Replaced low-order polynomial approximations for `Viridis`, `Plasma`, `Inferno`, `Magma`, and `Cividis` with exact 65-stop reference lookup tables sampled directly from the official matplotlib/seaborn reference specs, bringing maximum error below 0.1%.
+[x] Can we add Rocket perceptually uniform colormaps to the nifti/volumetric and tractography colormap options? 
+  - Added Rocket 65-stop reference colormap table and `colormapRocket(t)` in `src/colormaps.js`.
+  - Implemented 6th-order Horner polynomial `colormapRocket(float t)` in WebGL slice shader `src/shaders/sliceShader.js`.
+  - Added Rocket to Base Volume colormaps (`Rocket: 7`), NIfTI/GIfTI statistical overlay colormaps (`Rocket: 21`), and tractography colormaps (`Rocket: 'rocket'`).
+
+New Request: Completed. [x]
+[x] Organize the dropdown select submenue of bones by face bones, cranial bones, + mandible and cervical separately. Just have some subheadings above the respective options. Put mandible + cerivical at the top, followed by cranial, followed by face.
+  - Reordered `SKULL_SUBSTRUCTURES` in `src/meshManager.js` into three explicit categories: `mandible_cervical`, `cranial`, and `face`. Mandible & Cervical Vertebrae are pinned to the top, followed by Cranial Bones, and Face Bones at the bottom.
+  - Updated `setupSkullSubstructuresMultiselect` in `src/ui.js` to render `.multiselect-group-header` section headers between categories with dark/light theme styling.
+[x] Make the default color for the OhioSkull sub-bones be the default gray skull color for all instead of the colors you have them set to now. Still keep the current colors as a quick alternative option when you click into the colorpicker swatch.
+  - Set default color of all 22 skull sub-bones to the standard monolithic skull bone color (`0xeeece8` / `#eeece8`) in `src/meshManager.js`.
+  - Preserved each sub-bone's distinct anatomical color as an `Anatomical Color Preset` in the interactive swatch popover palette in `src/ui.js`, along with the `Default Bone Color` and full `🎨 Custom Color...` picker.
+[x] Add tractography for corticospinal and dorsal column/medial lemnisucs/thalamocortical to primary somatic and motor cortex, as well as optic radiations and optic nerve, as well as arcuate fasciculus, and corpus callosum (divided). Default 10% tract density. Organize with subheadings in the dropdown select menu, including "Projection Tracts", "Association Tracts", "Commissural Tracts", and "Cranial Nerves". The paths to the tracts are as follows:
+Medial lemniscus: /Users/jiturner/Repositories/Standard/hcp842_avg_tracts_trk/brainstem/ML_L.trk.gz (and ML_R)
+Spinothalamic: /Users/jiturner/Repositories/Standard/hcp842_avg_tracts_trk/brainstem/STT_L.trk.gz (and STT_R)
+Optic radiation: /Users/jiturner/Repositories/Standard/hcp842_avg_tracts_trk/projection/OR_L.trk.gz (and OR_R)
+Fornix: /Users/jiturner/Repositories/Standard/hcp842_avg_tracts_trk/projection/F_L.trk.gz (and F_R)
+Arcuate Facisculus: /Users/jiturner/Repositories/Standard/hcp842_avg_tracts_trk/association/AF_L.trk.gz (and AF_R)
+Corticospinal Tract: /Users/jiturner/Repositories/Standard/hcp842_avg_tracts_trk/projection/CST_L.trk.gz (and CST_R)
+Corticothalamic Tract: /Users/jiturner/Repositories/Standard/hcp842_avg_tracts_trk/projection/CT_L.trk.gz
+Corpus Callosum: /Users/jiturner/Repositories/Standard/hcp842_avg_tracts_trk/commissural/CC.trk.gz
+CNII (Optic Nerve): '/Users/jiturner/Repositories/Standard/hcp842_avg_tracts_trk/cranial nerves/CNII_L.trk.gz' (and CNII_R)
+CNIII: '/Users/jiturner/Repositories/Standard/hcp842_avg_tracts_trk/cranial nerves/CNIII_L.trk.gz' (and CNIII_R)
+CNIV: '/Users/jiturner/Repositories/Standard/hcp842_avg_trk/cranial nerves/CNIV_L.trk.gz' (and CNIV_R)
+CNV: '/Users/jiturner/Repositories/Standard/hcp842_avg_tracts_trk/cranial nerves/CNV_L.trk.gz' (and CNV_R)
+CNVII: ''/Users/jiturner/Repositories/Standard/hcp842_avg_tracts_trk/cranial nerves/CNVII_L.trk.gz'
+CNVIII: ''/Users/jiturner/Repositories/Standard/hcp842_avg_tracts_trk/cranial nerves/CNVIII_L.trk.gz' (and CNVIII_R)
+CNX: ''/Users/jiturner/Repositories/Standard/hcp842_avg_tracts_trk/cranial nerves/CNX_L.trk.gz' (and CNX_R)
+  - Staged all 32 neuroanatomical tract bundles into `public/data/tracts/`, including splitting the Corpus Callosum into anatomically partitioned Anterior/Genu ($Y > 10$), Body ($-15 \le Y \le 10$), and Posterior/Splenium ($Y < -15$), plus complete CC.
+  - Set default streamline density to 10% (`this.subsample = 10`) for 60 FPS rendering.
+  - Built full multiselect checklist widget organized under subheadings: "Projection Tracts", "Association Tracts", "Commissural Tracts", "Cranial Nerves", and "Custom Uploaded Tracts" with live streamline count badges (`5.2k`), quick [All]/[None] toggles, and per-bundle color swatch palettes.
+[x] The colormap options on tractography should allow the measure of differentiation between fibers to be the principal fiber orientation exactly as calculated for the surfice style visualization.
+  - Implemented `Principal Direction (Surf-Ice: LR → AP → IS)` as the primary colormap metric option (`colormapMetric = 'principal'`), using the exact Surf-Ice principal fiber orientation direction vector $(dx, dy, dz) / \text{len}$ and spherical parameterization: $t = (1 - \phi) \cdot (\theta \cdot 0.5) + \phi \cdot 1.0$ (mapping Left-Right to 0.0, Anterior-Posterior to 0.5, and Inferior-Superior to 1.0).
+  - Also provided individual directional components ($dx/\text{len}, dy/\text{len}, dz/\text{len}$) and elevation angle metrics.
+[ ] This is a reminder for myself, not for the AI agent. I will consider filling in the sphenoid bone anterior aspect (currently the sinus is open). This is only for my own personal reminder, not for action right now.
+[x] Bug: Tractography not reappearing after globally disabling clipping. You need to fiddle with tractography-specific toggle box for "multi plan clipping".
+  - Fixed root cause in `src/clippingManager.js`: `clippingManager.update()` was returning early before invoking update callbacks when `!this.globalEnabled`, leaving clipping planes active on tractography materials. Callbacks are now invoked before returning, clearing clipping planes across all tract materials immediately upon global disable.
+  - Added explicit `tractographyManager.updateClipping()` trigger to `ui.setClippingEnabled()`.
+[x] Bug: Only allows on tract at a time. We should allow multiple.
+  - Architected multi-tract concurrent management in `TractographyManager`: maintains discrete `LineSegments2` meshes, geometries, and materials per active bundle, allowing any combination of built-in and user-uploaded tracts to be loaded, visualized, colored, and clipped simultaneously. 
+
+New Request: Completed. [x]
+Don't push these to github yet, but let's get them working in the local app first. Once we have them working. I'll let you know when we're confident to push to github.
+[x] Support "dural folds" as a new mesh/structure to be visualized (default: not clipped, not visible). The path to the mesh currently is /Users/jiturner/Downloads/falx_tentorium_mesh.obj
+  - Cached `falx_tentorium_mesh.obj` into high-performance gzip binary format (`dural_folds.bin.gz`, 174,082 vertices, 348,580 triangles) via `build_cache.mjs` and staged into both `.cache/` and `public/data/` with `/api/binary/dural_folds` routing in `server.mjs`.
+  - Added full mesh lifecycle management in `MeshManager`: `loadDuralFolds()`, `setDuralFoldsVisible()`, `setDuralFoldsOpacity()`, `setDuralFoldsClipped()`, `setDuralFoldsStyle()`, and `updateDuralFoldsMaterial()`.
+  - Default state configured to not visible (`duralFoldsVisible = false`) and unclipped (`duralFoldsClipped = false`). Independent clipping syncs dynamically with the global clipping planes whenever "Clip Dural Folds" is toggled.
+  - Added toolbar toggle button `#btn-toggle-dural` (`title="Toggle Dural Folds (D)"`) in top toolbar Row 2 with active indicator and keyboard shortcut 'D'.
+  - Added `🛡️ Dural Folds` folder in the Lil-GUI Meshes panel with Visible, Clip Dural Folds, Opacity, Render Style, and Color controls.
+[x] Replace the current MNI152 base volume with this new one: /Users/jiturner/Repositories/Standard/mni_icbm152_nlin_asym_09b_nifti/mni_icbm152_nlin_asym_09b/mni_icbm152_t1_tal_nlin_asym_09b_hires.nii
+  - Updated `cache_volumes.py` to ingest high-resolution (0.5mm isotropic, 394x466x378) asymmetric non-linear ICBM152 2009b template.
+  - Processed and exported uint8 texture volume (`volume_mni152.bin.gz`, 69.4M voxels, raw intensity range 0–97.3) with metadata matching world coordinate affine and default raw window [40, 80].
+  - Staged into `.cache/` and `public/data/volume_mni152.bin.gz`, seamlessly served by both Node backend and static client.
+[x] Add "big brain" MRI atlas: /Users/jiturner/Repositories/Standard/BigBrain-to-ICBM2009asym-nonlin-500um.nii
+  - Placed BigBrain 500µm histology atlas in `Repositories/Standard/BigBrain-to-ICBM2009asym-nonlin-500um.nii`.
+  - Added background masking in `cache_volumes.py` to clamp histology slide border values (`>= 65534.0`) to zero, preventing background plane opacity artifacts while preserving histology tissue gradations.
+  - Cached uint8 normalized volume (`volume_bigbrain.bin.gz`, 69.4M voxels, 388x468x388) and metadata with default intensity window [25000, 60000] and range [0, 65535].
+  - Added `bigbrain` entry in `VOLUME_CONFIGS` in `volumeManager.js` and registered binary/metadata/raw endpoints in `server.mjs`.
+  - Added `BigBrain (500um)` option to `#select-mri-contrast` toolbar dropdown and Lil-GUI Base Volume selector with automatic window slider configuration.
+[x] Toggleable sub-bones: If the OhioSkull is the skull mesh, we should load ALL these meshes individuall: /Users/jiturner/Repositories/joseph_skulls/data/output/OhioOnJagakeSkull/substructures (contains numerous .obj named by anatomical bone). A dropdown multiselect checklist should allow users to toggle each sub-bone on/off individually, and the "Clip Skull" button should clip all of them together. The default state should be all sub-bones visible.
+  - Identified all 22 anatomical skull sub-bone OBJ models in `joseph_skulls/data/output/OhioOnJagakeSkull/substructures/`: cervical vertebrae, ethmoid, frontal, left/right inferior nasal concha, left/right lacrimal, left maxilla, right maxilla, left/right palatine, left/right parietal, left/right temporal, left/right zygomatic, mandible, nasal, occipital, sphenoid, and vomer (totaling 1,592,448 vertices and 1,543,059 faces).
+  - Pre-cached all 22 into binary formats (`subbone_*.bin.gz`) and JSON metadata in `.cache/` and `public/data/`. Exposed endpoints in `server.mjs`.
+  - Configured `SKULL_SUBSTRUCTURES` in `meshManager.js` with distinct anatomical color palettes and default state `enabled = true`.
+  - Implemented `ensureSkullSubstructuresLoaded()`, `loadSingleSkullSubstructure()`, `setSkullSubstructureEnabled()`, `setSkullSubstructureColor()`, and `updateSkullSubstructuresVisibility()`.
+  - Connected `switchSkull('ohio')`: hides monolithic skull mesh, loads and displays all 22 sub-bones, and reveals the Sub-bones multiselect widget. Switching back to `'full'` hides the sub-bones and restores the monolithic skull mesh.
+  - Connected "Clip Skull" and dynamic clipping updates to clip all 22 sub-bones simultaneously via shared uniforms and clipping planes.
+  - Built custom multiselect dropdown widget inside `💀 Skull Mesh` folder with live summary (`"All (22) selected ▾"`, `"${n} selected ▾"`), quick "All" and "None" buttons, individual toggle checkboxes, color swatch previews, preset popovers, and custom color pickers.
+
+
+New Request: Completed. [x]
 Great, everything's working well, I love where we're at. The next step is basically get things ready for a demo. 
 [x] Write a gitignore file and make sure we know what we want to track and don't want to track at this stage to not get overwhelming
   - Created `.gitignore` excluding bulky local artifacts: `node_modules/`, `dist/`, `.cache/`, runtime logs (`server.log`), scratch scripts (`_verify_tmp.mjs`), `.DS_Store`, Python caches, and editor configurations.

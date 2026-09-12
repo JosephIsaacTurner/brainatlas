@@ -1,0 +1,30 @@
+{
+  "name": "dural_folds",
+  "sourcePath": "/Users/jiturner/Downloads/falx_tentorium_mesh.obj",
+  "vertexCount": 174082,
+  "triangleCount": 348580,
+  "bounds": {
+    "min": [
+      -57.84289551,
+      -95.88694,
+      -65.99776459
+    ],
+    "max": [
+      58.8210907,
+      71.631073,
+      76.19076538
+    ],
+    "center": [
+      0.4890975950000005,
+      -12.127933499999997,
+      5.096500395
+    ],
+    "size": [
+      116.66398620999999,
+      167.518013,
+      142.18852997
+    ]
+  },
+  "rawBytes": 8360944,
+  "compressedBytes": 4714320
+}

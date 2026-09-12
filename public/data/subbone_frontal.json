@@ -1,0 +1,30 @@
+{
+  "name": "subbone_frontal",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/data/output/OhioOnJagakeSkull/substructures/frontal.obj",
+  "vertexCount": 37666,
+  "triangleCount": 75332,
+  "bounds": {
+    "min": [
+      -63.309036,
+      12.430293,
+      -42.69857
+    ],
+    "max": [
+      67.838181,
+      85.631958,
+      79.973915
+    ],
+    "center": [
+      2.2645725000000034,
+      49.0311255,
+      18.637672500000004
+    ],
+    "size": [
+      131.147217,
+      73.20166499999999,
+      122.672485
+    ]
+  },
+  "rawBytes": 1807984,
+  "compressedBytes": 1088767
+}

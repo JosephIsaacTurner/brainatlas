@@ -53,8 +53,48 @@ export const ADDITIONAL_BRAIN_STRUCTURES = [
     cacheKey: 'struct_limbic_system',
     defaultColor: 0xf43f5e,
     defaultColorHex: '#f43f5e'
+  },
+  {
+    id: 'pituitary',
+    name: 'Pituitary',
+    shortName: 'Pituitary',
+    file: 'pituitary_v2.obj',
+    cacheKey: 'struct_pituitary',
+    defaultColor: 0xec4899,
+    defaultColorHex: '#ec4899'
   }
 ];
+
+export const SKULL_SUBSTRUCTURES = [
+  // 1. Mandible & Cervical Vertebrae (at top)
+  { id: 'mandible', name: 'Mandible', shortName: 'Mandible', category: 'mandible_cervical', file: 'mandible.obj', cacheKey: 'subbone_mandible', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0xef4444, anatomicalColorHex: '#ef4444' },
+  { id: 'cervical_vertebrae', name: 'Cervical Vertebrae', shortName: 'Cervical Vertebrae', category: 'mandible_cervical', file: 'cervical_vertebrae.obj', cacheKey: 'subbone_cervical_vertebrae', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0x94a3b8, anatomicalColorHex: '#94a3b8' },
+
+  // 2. Cranial Bones
+  { id: 'frontal', name: 'Frontal Bone', shortName: 'Frontal', category: 'cranial', file: 'frontal.obj', cacheKey: 'subbone_frontal', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0xf59e0b, anatomicalColorHex: '#f59e0b' },
+  { id: 'occipital', name: 'Occipital Bone', shortName: 'Occipital', category: 'cranial', file: 'occipital.obj', cacheKey: 'subbone_occipital', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0x8b5cf6, anatomicalColorHex: '#8b5cf6' },
+  { id: 'sphenoid', name: 'Sphenoid Bone', shortName: 'Sphenoid', category: 'cranial', file: 'sphenoid.obj', cacheKey: 'subbone_sphenoid', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0xec4899, anatomicalColorHex: '#ec4899' },
+  { id: 'ethmoid', name: 'Ethmoid Bone', shortName: 'Ethmoid', category: 'cranial', file: 'ethmoid.obj', cacheKey: 'subbone_ethmoid', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0x14b8a6, anatomicalColorHex: '#14b8a6' },
+  { id: 'left_parietal', name: 'Left Parietal Bone', shortName: 'L Parietal', category: 'cranial', file: 'left_parietal.obj', cacheKey: 'subbone_left_parietal', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0x3b82f6, anatomicalColorHex: '#3b82f6' },
+  { id: 'right_parietal', name: 'Right Parietal Bone', shortName: 'R Parietal', category: 'cranial', file: 'right_parietal.obj', cacheKey: 'subbone_right_parietal', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0x60a5fa, anatomicalColorHex: '#60a5fa' },
+  { id: 'left_temporal', name: 'Left Temporal Bone', shortName: 'L Temporal', category: 'cranial', file: 'left_temporal.obj', cacheKey: 'subbone_left_temporal', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0x10b981, anatomicalColorHex: '#10b981' },
+  { id: 'right_temporal', name: 'Right Temporal Bone', shortName: 'R Temporal', category: 'cranial', file: 'right_temporal.obj', cacheKey: 'subbone_right_temporal', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0x34d399, anatomicalColorHex: '#34d399' },
+
+  // 3. Face Bones
+  { id: 'nasal', name: 'Nasal Bone', shortName: 'Nasal', category: 'face', file: 'nasal.obj', cacheKey: 'subbone_nasal', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0xf97316, anatomicalColorHex: '#f97316' },
+  { id: 'vomer', name: 'Vomer', shortName: 'Vomer', category: 'face', file: 'vomer.obj', cacheKey: 'subbone_vomer', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0xd946ef, anatomicalColorHex: '#d946ef' },
+  { id: 'left_maxilla', name: 'Left Maxilla', shortName: 'L Maxilla', category: 'face', file: 'left_maxilla.obj', cacheKey: 'subbone_left_maxilla', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0xeab308, anatomicalColorHex: '#eab308' },
+  { id: 'right_maxillary', name: 'Right Maxilla', shortName: 'R Maxilla', category: 'face', file: 'right_maxillary.obj', cacheKey: 'subbone_right_maxillary', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0xfacc15, anatomicalColorHex: '#facc15' },
+  { id: 'left_zygomatic', name: 'Left Zygomatic Bone', shortName: 'L Zygomatic', category: 'face', file: 'left_zygomatic.obj', cacheKey: 'subbone_left_zygomatic', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0xa855f7, anatomicalColorHex: '#a855f7' },
+  { id: 'right_zygomatic', name: 'Right Zygomatic Bone', shortName: 'R Zygomatic', category: 'face', file: 'right_zygomatic.obj', cacheKey: 'subbone_right_zygomatic', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0xc084fc, anatomicalColorHex: '#c084fc' },
+  { id: 'left_lacrimal', name: 'Left Lacrimal Bone', shortName: 'L Lacrimal', category: 'face', file: 'left_lacrimal.obj', cacheKey: 'subbone_left_lacrimal', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0x06b6d4, anatomicalColorHex: '#06b6d4' },
+  { id: 'right_lacrimal', name: 'Right Lacrimal Bone', shortName: 'R Lacrimal', category: 'face', file: 'right_lacrimal.obj', cacheKey: 'subbone_right_lacrimal', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0x22d3ee, anatomicalColorHex: '#22d3ee' },
+  { id: 'left_palatine', name: 'Left Palatine Bone', shortName: 'L Palatine', category: 'face', file: 'left_palatine.obj', cacheKey: 'subbone_left_palatine', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0x6366f1, anatomicalColorHex: '#6366f1' },
+  { id: 'right_palatine', name: 'Right Palatine Bone', shortName: 'R Palatine', category: 'face', file: 'right_palatine.obj', cacheKey: 'subbone_right_palatine', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0x818cf8, anatomicalColorHex: '#818cf8' },
+  { id: 'left_inferior_nasal_concha', name: 'Left Inferior Nasal Concha', shortName: 'L Inf Nasal Concha', category: 'face', file: 'left_inferior_nasal_concha.obj', cacheKey: 'subbone_left_inferior_nasal_concha', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0x84cc16, anatomicalColorHex: '#84cc16' },
+  { id: 'right_inferior_nasal_concha', name: 'Right Inferior Nasal Concha', shortName: 'R Inf Nasal Concha', category: 'face', file: 'right_inferior_nasal_concha.obj', cacheKey: 'subbone_right_inferior_nasal_concha', defaultColor: 0xeeece8, defaultColorHex: '#eeece8', anatomicalColor: 0xa3e635, anatomicalColorHex: '#a3e635' }
+];
+
 
 export class MeshManager {
   constructor(scene, clippingPlanes = []) {
@@ -126,6 +166,20 @@ export class MeshManager {
     this.skullStyle = 'bone'; // Default: bone style
     this.skullClipped = true;
 
+    // Toggleable Skull Sub-bones (Ohio Skull anatomical substructures)
+    this.skullSubstructures = {};
+    for (const s of SKULL_SUBSTRUCTURES) {
+      this.skullSubstructures[s.id] = {
+        ...s,
+        color: s.defaultColor,
+        enabled: true, // Default state: all sub-bones visible
+        mesh: null,
+        geometry: null,
+        material: null,
+        loading: false
+      };
+    }
+
     // 3. Hardcoded Ventricle Mask Mesh
     this.ventriclesMesh = null;
     this.ventriclesGeometry = null;
@@ -166,7 +220,17 @@ export class MeshManager {
     this.venousStyle = 'bone'; // Default: closest match to prior standard material
     this.venousClipped = false; // Default: NOT clipped
 
-    // 7. Custom Drag & Drop OBJ Meshes
+    // 7. Dural Folds Mesh (falx_tentorium_mesh.obj)
+    this.duralFoldsMesh = null;
+    this.duralFoldsGeometry = null;
+    this.duralFoldsMaterial = null;
+    this.duralFoldsVisible = false; // Default: not visible
+    this.duralFoldsOpacity = 0.95;
+    this.duralFoldsColor = 0xa78bfa; // Default: distinct lavender/purple
+    this.duralFoldsStyle = 'bone'; // Default: bone render style
+    this.duralFoldsClipped = false; // Default: NOT clipped
+
+    // 8. Custom Drag & Drop OBJ Meshes
     this.customMeshes = [];
 
     // MatCap support
@@ -308,7 +372,7 @@ export class MeshManager {
     }
   }
 
-  // --- Skull Mesh Loading (Full + Ohio) ---
+  // --- Skull Mesh Loading (Full + Ohio Substructures) ---
   async loadSkull(onProgress = null) {
     if (onProgress) onProgress({ phase: 'skull', progress: 0.1, message: 'Fetching full skull mesh...' });
     const buffer = await fetchBinary('data/skull.bin.gz');
@@ -319,40 +383,158 @@ export class MeshManager {
 
     this.skullMesh = new THREE.Mesh(this.skullGeometries.full, this.skullMaterial);
     this.skullMesh.name = 'SkullMesh';
-    this.skullMesh.visible = this.skullVisible;
+    this.skullMesh.visible = (this.currentSkullType === 'full') && this.skullVisible;
     this.scene.add(this.skullMesh);
 
     if (onProgress) onProgress({ phase: 'skull', progress: 1.0, message: 'Skull mesh ready' });
 
-    // Preload Ohio skull in background
-    this.preloadOhioSkull();
+    // Preload Ohio skull substructures in background
+    setTimeout(() => {
+      this.ensureSkullSubstructuresLoaded().catch(() => {});
+    }, 100);
 
     return this.skullMesh;
   }
 
-  async preloadOhioSkull() {
+  async switchSkull(type) {
+    this.currentSkullType = type;
+    if (type === 'ohio') {
+      if (this.skullMesh) {
+        this.skullMesh.visible = false;
+      }
+      await this.ensureSkullSubstructuresLoaded();
+      this.updateSkullSubstructuresVisibility();
+    } else {
+      // Switch back to monolithic full skull and re-enable all sub-bones
+      for (const id in this.skullSubstructures) {
+        const sub = this.skullSubstructures[id];
+        sub.enabled = true;
+        if (sub.mesh) sub.mesh.visible = false;
+      }
+      if (!this.skullGeometries.full) {
+        const buf = await fetchBinary('data/skull.bin.gz');
+        this.skullGeometries.full = this.parseBinaryMesh(buf);
+        this.skullGeometries.full.computeBoundingBox();
+      }
+      if (this.skullMesh) {
+        this.skullMesh.geometry = this.skullGeometries.full;
+        this.skullMesh.visible = this.skullVisible;
+      }
+    }
+    this.notifyMeshesChange();
+  }
+
+  // --- Ohio Skull Substructures Loading and Management ---
+  async ensureSkullSubstructuresLoaded(onProgress = null) {
+    const ids = Object.keys(this.skullSubstructures);
+    let loadedCount = 0;
+    const promises = ids.map(async (id) => {
+      await this.loadSingleSkullSubstructure(id);
+      loadedCount++;
+      if (onProgress) {
+        onProgress({
+          phase: 'skull_substructures',
+          progress: loadedCount / ids.length,
+          message: `Loading skull sub-bones (${loadedCount}/${ids.length})...`
+        });
+      }
+    });
+    await Promise.all(promises);
+  }
+
+  async loadSingleSkullSubstructure(id) {
+    const sub = this.skullSubstructures[id];
+    if (!sub || sub.mesh || sub.loading) return sub?.mesh;
+    sub.loading = true;
     try {
-      const buf = await fetchBinary('data/skull_ohio.bin.gz');
-      this.skullGeometries.ohio = this.parseBinaryMesh(buf);
-      this.skullGeometries.ohio.computeBoundingBox();
+      const buffer = await fetchBinary(`data/${sub.cacheKey}.bin.gz`);
+      sub.geometry = this.parseBinaryMesh(buffer);
+      sub.geometry.computeBoundingBox();
+
+      sub.material = this.createStyledMaterial(
+        this.skullStyle,
+        sub.color,
+        this.skullOpacity,
+        () => this.skullClipped
+      );
+
+      sub.mesh = new THREE.Mesh(sub.geometry, sub.material);
+      sub.mesh.name = `SkullSubstructure_${id}`;
+      sub.mesh.visible = (this.currentSkullType === 'ohio') && this.skullVisible && sub.enabled;
+      this.scene.add(sub.mesh);
+      return sub.mesh;
     } catch (e) {
-      console.warn('Could not preload Ohio skull:', e);
+      console.error(`Failed to load skull sub-bone ${id}:`, e);
+    } finally {
+      sub.loading = false;
     }
   }
 
-  async switchSkull(type) {
-    this.currentSkullType = type;
-    if (!this.skullGeometries[type]) {
-      const cacheKey = type === 'ohio' ? 'skull_ohio' : `skull_${type}`;
-      const buf = await fetchBinary(`data/${cacheKey}.bin.gz`);
-      this.skullGeometries[type] = this.parseBinaryMesh(buf);
-      this.skullGeometries[type].computeBoundingBox();
+  setSkullSubstructureEnabled(id, enabled) {
+    const sub = this.skullSubstructures[id];
+    if (!sub) return;
+    sub.enabled = enabled;
+    if (enabled && !sub.mesh) {
+      this.loadSingleSkullSubstructure(id).then(() => {
+        this.updateSkullSubstructuresVisibility();
+      });
+    } else {
+      this.updateSkullSubstructuresVisibility();
     }
+  }
 
-    if (this.skullMesh && this.skullGeometries[type]) {
-      this.skullMesh.geometry = this.skullGeometries[type];
-      this.skullMesh.geometry.needsUpdate = true;
+  setSkullSubstructureColor(id, hexColor) {
+    const sub = this.skullSubstructures[id];
+    if (!sub) return;
+    sub.color = typeof hexColor === 'string' ? parseInt(hexColor.replace('#', '0x'), 16) : hexColor;
+    sub.defaultColorHex = typeof hexColor === 'string' ? hexColor : '#' + sub.color.toString(16).padStart(6, '0');
+    this.updateSkullSubstructureMaterial(id);
+  }
+
+  updateSkullSubstructureMaterial(id) {
+    const sub = this.skullSubstructures[id];
+    if (!sub || !sub.mesh) return;
+    sub.material = this.createStyledMaterial(
+      this.skullStyle,
+      sub.color,
+      this.skullOpacity,
+      () => this.skullClipped
+    );
+    sub.mesh.material = sub.material;
+    sub.mesh.material.needsUpdate = true;
+  }
+
+  updateAllSkullSubstructureMaterials() {
+    for (const id in this.skullSubstructures) {
+      this.updateSkullSubstructureMaterial(id);
     }
+  }
+
+  updateSkullSubstructuresVisibility() {
+    for (const id in this.skullSubstructures) {
+      const sub = this.skullSubstructures[id];
+      if (sub.mesh) {
+        sub.mesh.visible = (this.currentSkullType === 'ohio') && this.skullVisible && sub.enabled;
+      }
+    }
+  }
+
+  // --- Dural Folds Mesh Loading (falx_tentorium_mesh.obj) ---
+  async loadDuralFolds(onProgress = null) {
+    if (onProgress) onProgress({ phase: 'dural_folds', progress: 0.2, message: 'Fetching dural folds mesh...' });
+    const buffer = await fetchBinary('data/dural_folds.bin.gz');
+    this.duralFoldsGeometry = this.parseBinaryMesh(buffer);
+    this.duralFoldsGeometry.computeBoundingBox();
+
+    this.updateDuralFoldsMaterial();
+
+    this.duralFoldsMesh = new THREE.Mesh(this.duralFoldsGeometry, this.duralFoldsMaterial);
+    this.duralFoldsMesh.name = 'DuralFoldsMesh';
+    this.duralFoldsMesh.visible = this.duralFoldsVisible;
+    this.scene.add(this.duralFoldsMesh);
+
+    if (onProgress) onProgress({ phase: 'dural_folds', progress: 1.0, message: 'Dural folds mesh ready' });
+    return this.duralFoldsMesh;
   }
 
   // --- Ventricles Mesh Loading ---
@@ -811,11 +993,15 @@ export class MeshManager {
       this.updateBrainMaterial();
       this.updateAdditionalBrainStructuresMaterials();
     }
-    if (this.skullStyle === 'matcap') this.updateSkullMaterial();
+    if (this.skullStyle === 'matcap') {
+      this.updateSkullMaterial();
+      this.updateAllSkullSubstructureMaterials();
+    }
     if (this.skinStyle === 'matcap') this.updateSkinMaterial();
     if (this.ventriclesStyle === 'matcap') this.updateVentriclesMaterial();
     if (this.arterialStyle === 'matcap') this.updateArterialMaterial();
     if (this.venousStyle === 'matcap') this.updateVenousMaterial();
+    if (this.duralFoldsStyle === 'matcap') this.updateDuralFoldsMaterial();
   }
 
   updateVelvetUniforms() {
@@ -1259,17 +1445,24 @@ export class MeshManager {
 
   setSkullVisible(visible) {
     this.skullVisible = visible;
-    if (this.skullMesh) this.skullMesh.visible = visible;
+    if (this.currentSkullType === 'ohio') {
+      if (this.skullMesh) this.skullMesh.visible = false;
+      this.updateSkullSubstructuresVisibility();
+    } else {
+      if (this.skullMesh) this.skullMesh.visible = visible;
+    }
   }
 
   setSkullOpacity(opacity) {
     this.skullOpacity = opacity;
     this.updateSkullMaterial();
+    this.updateAllSkullSubstructureMaterials();
   }
 
   setSkullStyle(style) {
     this.skullStyle = style;
     this.updateSkullMaterial();
+    this.updateAllSkullSubstructureMaterials();
   }
 
   setSkullClipped(clipped) {
@@ -1287,6 +1480,23 @@ export class MeshManager {
       mat.clippingPlanes = clipped ? this.clippingPlanes : [];
       mat.needsUpdate = true;
     }
+    // "and the 'Clip Skull' button should clip all of them together."
+    for (const id in this.skullSubstructures) {
+      const sub = this.skullSubstructures[id];
+      if (sub.mesh && sub.mesh.material) {
+        const mat = sub.mesh.material;
+        if (mat.uniforms && mat.uniforms.uMeshClipped) {
+          mat.uniforms.uMeshClipped.value = clipped;
+        }
+        if (mat.userData?.shader?.uniforms?.uMeshClipped) {
+          try {
+            mat.userData.shader.uniforms.uMeshClipped.value = clipped;
+          } catch (e) {}
+        }
+        mat.clippingPlanes = clipped ? this.clippingPlanes : [];
+        mat.needsUpdate = true;
+      }
+    }
   }
 
   updateSkullMaterial() {
@@ -1298,6 +1508,8 @@ export class MeshManager {
       this.skullMesh.material = this.skullMaterial;
       this.skullMesh.material.needsUpdate = true;
     }
+
+    this.updateAllSkullSubstructureMaterials();
   }
 
   // --- Ventricles Material ---
@@ -1478,6 +1690,51 @@ export class MeshManager {
     }
   }
 
+  // --- Dural Folds Material ---
+  setDuralFoldsVisible(visible) {
+    this.duralFoldsVisible = visible;
+    if (this.duralFoldsMesh) this.duralFoldsMesh.visible = visible;
+  }
+
+  setDuralFoldsOpacity(opacity) {
+    this.duralFoldsOpacity = opacity;
+    this.updateDuralFoldsMaterial();
+  }
+
+  setDuralFoldsClipped(clipped) {
+    this.duralFoldsClipped = clipped;
+    if (this.duralFoldsMesh && this.duralFoldsMesh.material) {
+      const mat = this.duralFoldsMesh.material;
+      if (mat.uniforms && mat.uniforms.uMeshClipped) {
+        mat.uniforms.uMeshClipped.value = clipped;
+      }
+      if (mat.userData?.shader?.uniforms?.uMeshClipped) {
+        try {
+          mat.userData.shader.uniforms.uMeshClipped.value = clipped;
+        } catch (e) {}
+      }
+      mat.clippingPlanes = clipped ? this.clippingPlanes : [];
+      mat.needsUpdate = true;
+    }
+  }
+
+  setDuralFoldsStyle(style) {
+    this.duralFoldsStyle = style;
+    this.updateDuralFoldsMaterial();
+  }
+
+  updateDuralFoldsMaterial() {
+    this.duralFoldsMaterial = this.createStyledMaterial(
+      this.duralFoldsStyle, this.duralFoldsColor, this.duralFoldsOpacity, () => this.duralFoldsClipped,
+      { roughness: 0.4, metalness: 0.1 }
+    );
+
+    if (this.duralFoldsMesh) {
+      this.duralFoldsMesh.material = this.duralFoldsMaterial;
+      this.duralFoldsMesh.material.needsUpdate = true;
+    }
+  }
+
   // --- Multi-Plane Clipping Updates ---
   updateClippingPlanes(planes, clipUniforms = null) {
     this.clippingPlanes = planes;
@@ -1527,10 +1784,16 @@ export class MeshManager {
     if (this.skinMesh) syncMat(this.skinMesh.material, this.skinClipped);
     if (this.arterialMesh) syncMat(this.arterialMesh.material, this.arterialClipped);
     if (this.venousMesh) syncMat(this.venousMesh.material, this.venousClipped);
+    if (this.duralFoldsMesh) syncMat(this.duralFoldsMesh.material, this.duralFoldsClipped);
 
     for (const key in this.additionalBrainStructures) {
       const struct = this.additionalBrainStructures[key];
       if (struct && struct.mesh) syncMat(struct.mesh.material, this.brainClipped);
+    }
+
+    for (const key in this.skullSubstructures) {
+      const sub = this.skullSubstructures[key];
+      if (sub && sub.mesh) syncMat(sub.mesh.material, this.skullClipped);
     }
 
     for (const c of this.customMeshes) {

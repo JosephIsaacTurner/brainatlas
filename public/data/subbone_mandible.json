@@ -1,0 +1,30 @@
+{
+  "name": "subbone_mandible",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/data/output/OhioOnJagakeSkull/substructures/mandible.obj",
+  "vertexCount": 137518,
+  "triangleCount": 275080,
+  "bounds": {
+    "min": [
+      -62.383682,
+      -25.877886,
+      -167.613144
+    ],
+    "max": [
+      64.922012,
+      62.245934,
+      -49.159801
+    ],
+    "center": [
+      1.2691649999999974,
+      18.184024,
+      -108.3864725
+    ],
+    "size": [
+      127.30569399999999,
+      88.12382,
+      118.453343
+    ]
+  },
+  "rawBytes": 6601408,
+  "compressedBytes": 3953333
+}

@@ -1,0 +1,30 @@
+{
+  "name": "subbone_cervical_vertebrae",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/data/output/OhioOnJagakeSkull/substructures/cervical_vertebrae.obj",
+  "vertexCount": 131606,
+  "triangleCount": 263268,
+  "bounds": {
+    "min": [
+      -45.771309,
+      -90.378258,
+      -145.614655
+    ],
+    "max": [
+      46.092758,
+      -24.280333,
+      -68.854889
+    ],
+    "center": [
+      0.1607245000000006,
+      -57.3292955,
+      -107.23477199999999
+    ],
+    "size": [
+      91.864067,
+      66.097925,
+      76.759766
+    ]
+  },
+  "rawBytes": 6317776,
+  "compressedBytes": 3763976
+}

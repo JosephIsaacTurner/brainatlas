@@ -1,0 +1,30 @@
+{
+  "name": "subbone_right_palatine",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/data/output/OhioOnJagakeSkull/substructures/right_palatine.obj",
+  "vertexCount": 3559,
+  "triangleCount": 7114,
+  "bounds": {
+    "min": [
+      0.283905,
+      12.351629,
+      -93.15168
+    ],
+    "max": [
+      23.458101,
+      47.607544,
+      -51.891151
+    ],
+    "center": [
+      11.871003,
+      29.9795865,
+      -72.5214155
+    ],
+    "size": [
+      23.174196,
+      35.255914999999995,
+      41.260529
+    ]
+  },
+  "rawBytes": 170800,
+  "compressedBytes": 103302
+}

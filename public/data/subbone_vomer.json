@@ -1,0 +1,30 @@
+{
+  "name": "subbone_vomer",
+  "sourcePath": "/Users/jiturner/Repositories/joseph_skulls/data/output/OhioOnJagakeSkull/substructures/vomer.obj",
+  "vertexCount": 13083,
+  "triangleCount": 4762,
+  "bounds": {
+    "min": [
+      -0.41022477,
+      -5.64682245,
+      -87.47909546
+    ],
+    "max": [
+      5.38098335,
+      60.86709213,
+      -57.78381729
+    ],
+    "center": [
+      2.48537929,
+      27.61013484,
+      -72.631456375
+    ],
+    "size": [
+      5.79120812,
+      66.51391458,
+      29.695278169999995
+    ]
+  },
+  "rawBytes": 371152,
+  "compressedBytes": 133876
+}
