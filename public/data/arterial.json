@@ -1,8 +1,8 @@
 {
   "name": "arterial",
   "sourcePath": "/Users/jiturner/Repositories/Standard/UBA167/manually_refined_again.obj",
-  "vertexCount": 33927,
-  "triangleCount": 67824,
+  "vertexCount": 34236,
+  "triangleCount": 68440,
   "bounds": {
     "min": [
       -44.88332,
@@ -25,6 +25,6 @@
       101.580759
     ]
   },
-  "rawBytes": 1628152,
-  "compressedBytes": 998548
+  "rawBytes": 1642960,
+  "compressedBytes": 1008007
 }

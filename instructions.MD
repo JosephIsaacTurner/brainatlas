@@ -2,7 +2,7 @@ New Request: Completed. [x]
 [x] Replace the current arterial mesh with this new one that I've improved even more: /Users/jiturner/Repositories/Standard/UBA167/manually_refined_again.obj
   - Updated `ARTERIAL_OBJ_PATH` to `/Users/jiturner/Repositories/Standard/UBA167/manually_refined_again.obj` in `build_cache.mjs`.
   - Backed up raw mesh to `public/data/raw/arterial.obj`.
-  - Re-cached `public/data/arterial.bin.gz` (998 KB, 33,927 vertices, 67,824 triangles) and `public/data/arterial.json`.
+  - Re-cached `public/data/arterial.bin.gz` (1.0 MB, 34,236 vertices, 68,440 triangles) and `public/data/arterial.json`.
 [x] Commit all latest changes, push to github, update the github pages deployment.
   - Staged all changes and untracked binary/data assets.
   - Committed with clear descriptive message, pushed to `origin main`.
