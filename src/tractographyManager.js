@@ -361,7 +361,7 @@ export class TractographyManager {
     this.dither = 0.25;
     this.opacity = 0.85;
     this.lineWidth = 2.0;
-    this.clipTracts = true;
+    this.clipTracts = false; // Default: do not clip tracts
     this.subsample = 10; // Default 10% tract density (every 10th streamline)
 
     // Legacy compatibility fields

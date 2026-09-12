@@ -1,4 +1,17 @@
 New Request: Completed. [x]
+[x] For tracts, make default to NOT clip them.
+  - Set `this.clipTracts = false` by default in `src/tractographyManager.js`.
+  - Tract lines initialize unclipped when enabled; 'Multi-Plane Clipping' in Tractography settings remains available to toggle on as needed.
+[x] Can we apply html {zoom: 0.75} globally to the styles so that the entire app is scaled down to 75% of its original size? Literally just html { zoom: 0.75; }
+  - Added global `html { zoom: 0.75; }` rule in `src/style.css`, scaling the entire app and all GUI elements cleanly down to 75% size.
+[x] Make sure the bottom-left turntable spin controls text color changes appropriately depending on theme (currently hard to read on light theme)
+  - Updated turntable panel text, header, label, unit, and number input styles in `src/style.css` with explicit `body.theme-white` overrides.
+  - High-contrast slate styling (`#1e293b`, `#475569`, `#0f172a` text on `#f1f5f9` input) ensures crisp readability in light mode while maintaining clean dark mode styling.
+[x] Push changes and update site accordingly.
+  - Built production bundle with `npm run build`.
+  - Committed and pushed to `origin main`, triggering automatic GitHub Pages deployment.
+
+New Request: Completed. [x]
 [x] Re-cache/process BigBrain volume without parenchyma/zero-masking (raw volume directly from /Users/jiturner/Repositories/Standard/BigBrain-to-ICBM2009asym-nonlin-500um.nii). Keep changes local, do not push yet.
   - Removed artificial zero-masking (`flat_data[flat_data >= 65534.0] = 0.0`) and removed `is_bigbrain` flag in `scripts/cache_volumes.py`.
   - Switched `volume_bigbrain` encoding to normalized `float16` (`THREE.HalfFloatType`), preserving full 16-bit histology dynamic range ([0.0, 65535.0]) without quantization posterization.
