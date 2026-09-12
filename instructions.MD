@@ -1,4 +1,11 @@
 New Request: Completed. [x]
+[x] Re-cache/process BigBrain volume without parenchyma/zero-masking (raw volume directly from /Users/jiturner/Repositories/Standard/BigBrain-to-ICBM2009asym-nonlin-500um.nii). Keep changes local, do not push yet.
+  - Removed artificial zero-masking (`flat_data[flat_data >= 65534.0] = 0.0`) and removed `is_bigbrain` flag in `scripts/cache_volumes.py`.
+  - Switched `volume_bigbrain` encoding to normalized `float16` (`THREE.HalfFloatType`), preserving full 16-bit histology dynamic range ([0.0, 65535.0]) without quantization posterization.
+  - Re-generated `.cache/volume_bigbrain.bin.gz`, `public/data/volume_bigbrain.bin.gz` (~20.08 MB gzipped), `.cache/volume_bigbrain.json`, and `public/data/volume_bigbrain.json`.
+  - Rebuilt static assets via `npm run build` updating `dist/data/volume_bigbrain.*`. Kept changes strictly local without pushing.
+
+New Request: Completed. [x]
 [x] Replace the current arterial mesh with this new one that I've improved even more: /Users/jiturner/Repositories/Standard/UBA167/manually_refined_again.obj
   - Updated `ARTERIAL_OBJ_PATH` to `/Users/jiturner/Repositories/Standard/UBA167/manually_refined_again.obj` in `build_cache.mjs`.
   - Backed up raw mesh to `public/data/raw/arterial.obj`.

@@ -56,14 +56,14 @@
     0.38095238095238093,
     1.0
   ],
-  "rawMin": 1.0,
+  "rawMin": 0.0,
   "rawMax": 65535.0,
   "defaultWindow": [
     25000.0,
     60000.0
   ],
   "isAtlas": false,
-  "format": "uint8",
-  "byteLength": 69402312,
-  "compressedLength": 11780419
+  "format": "float16",
+  "byteLength": 138804624,
+  "compressedLength": 21062321
 }

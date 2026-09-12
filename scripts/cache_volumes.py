@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import gzip
 import shutil
@@ -41,7 +42,6 @@ VOLUMES = {
     'volume_bigbrain': {
         'path': '/Users/jiturner/Repositories/Standard/BigBrain-to-ICBM2009asym-nonlin-500um.nii',
         'is_atlas': False,
-        'is_bigbrain': True,
         'default_window': [25000.0, 60000.0]
     },
     'volume_tissue': {
@@ -104,16 +104,11 @@ def process_volume(name, config):
 
     flat_data = data.flatten(order='F') # Fortran order: i + j*nx + k*nx*ny
 
-    if config.get('is_bigbrain', False):
-        # BigBrain background is padded with 65535 (or > 65534)
-        flat_data[flat_data >= 65534.0] = 0.0
-        min_val = float(np.min(flat_data[flat_data > 0])) if np.any(flat_data > 0) else 0.0
-        max_val = 65535.0
-        print(f"  BigBrain background masked: set >=65534 to 0. Non-zero range: min={min_val}, max={max_val}")
-
-    if name == 'volume_ct':
+    if name in ['volume_ct', 'volume_bigbrain']:
         # CT continuous normalized float16 encoding preserves full floating-point precision
-        # in soft tissue (10-90 HU) preventing the 12-level posterization/chunky appearance
+        # in soft tissue (10-90 HU) preventing the 12-level posterization/chunky appearance.
+        # BigBrain continuous normalized float16 encoding preserves full 16-bit histology dynamic range
+        # without quantization banding and with raw unmasked intensities intact.
         max_val_safe = max_val if max_val > 0 else 1.0
         norm_data = np.clip(flat_data / max_val_safe, 0.0, 1.0).astype(np.float16)
         data_bytes = norm_data.tobytes()
@@ -197,5 +192,8 @@ def process_volume(name, config):
         print("  Copied volume_t1 -> volume.bin.gz and volume.json")
 
 if __name__ == '__main__':
+    target = sys.argv[1] if len(sys.argv) > 1 else None
     for name, config in VOLUMES.items():
+        if target and name != target:
+            continue
         process_volume(name, config)
