@@ -23,6 +23,7 @@
   "author": "Joseph Turner / Antigravity",
   "license": "BSD-2-Clause",
   "dependencies": {
+    "h5wasm": "^0.10.3",
     "lil-gui": "^0.20.0",
     "nifti-reader-js": "^0.8.0",
     "pako": "^3.0.1",

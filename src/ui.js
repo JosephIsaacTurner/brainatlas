@@ -3,6 +3,7 @@ import GUI from 'lil-gui';
 import { VOLUME_CONFIGS } from './volumeManager.js';
 import { isGIIScalarFile } from './meshParsers.js';
 import { MESH_RENDER_STYLES, ADDITIONAL_BRAIN_STRUCTURES, SKULL_SUBSTRUCTURES } from './meshManager.js';
+import { generateMeshFromVolume } from './marchingCubes.js';
 
 function makeBold(controller) {
   if (controller && controller.domElement) {
@@ -718,6 +719,12 @@ export class UIManager {
         <button class="sidebar-tab active" id="tab-btn-meshes">🧠 Meshes</button>
         <button class="sidebar-tab" id="tab-btn-volumes">🔬 Volumes</button>
         <button class="sidebar-tab" id="tab-btn-overlays">📊 Overlays</button>
+        <button class="sidebar-search-btn" id="btn-search-structures" title="Search structures, meshes, tracts (/ or ⌘K)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
       </div>
       <div class="sidebar-panels">
         <div class="sidebar-panel active" id="sidebar-panel-meshes"></div>
@@ -730,6 +737,7 @@ export class UIManager {
     const btnMeshes = document.getElementById('tab-btn-meshes');
     const btnVolumes = document.getElementById('tab-btn-volumes');
     const btnOverlays = document.getElementById('tab-btn-overlays');
+    const btnSearch = document.getElementById('btn-search-structures');
     const panelMeshes = document.getElementById('sidebar-panel-meshes');
     const panelVolumes = document.getElementById('sidebar-panel-volumes');
     const panelOverlays = document.getElementById('sidebar-panel-overlays');
@@ -740,6 +748,9 @@ export class UIManager {
     btnMeshes.addEventListener('click', () => this.switchTab('meshes'));
     btnVolumes.addEventListener('click', () => this.switchTab('volumes'));
     btnOverlays.addEventListener('click', () => this.switchTab('overlays'));
+    if (btnSearch) {
+      btnSearch.addEventListener('click', () => this.openStructureSearchModal());
+    }
 
     // 3. Initialize the GUI panels
     this.clipGui = new GUI({ container: this.clippingSidebar, title: '✂️ Slice Selection & Clipping', width: 330 });
@@ -762,7 +773,8 @@ export class UIManager {
 
   initMeshGUI() {
     // 1. BRAIN & VELVET SHADER
-    const brainFolder = this.meshGui.addFolder('🧠 Brain');
+    this.brainFolder = this.meshGui.addFolder('🧠 Brain');
+    const brainFolder = this.brainFolder;
     this.brainVisController = makeBold(brainFolder.add(this.meshManager, 'brainVisible').name('Visible')).onChange((v) => {
       this.setBrainVisible(v);
     });
@@ -822,7 +834,8 @@ export class UIManager {
     velvetFolder.add(this.meshManager, 'velvetLightBackfaces').name('Light Backfaces').onChange(() => this.meshManager.updateVelvetUniforms());
 
     // 2. SKULL (Full vs Ohio)
-    const skullFolder = this.meshGui.addFolder('💀 Skull');
+    this.skullFolder = this.meshGui.addFolder('💀 Skull');
+    const skullFolder = this.skullFolder;
     this.skullVisController = makeBold(skullFolder.add(this.meshManager, 'skullVisible').name('Visible')).onChange((v) => {
       this.setSkullVisible(v);
     });
@@ -848,7 +861,8 @@ export class UIManager {
     skullFolder.addColor(this.meshManager, 'skullColor').name('Bone Color').onChange(() => this.meshManager.updateSkullMaterial());
 
     // 3. SOFT TISSUE
-    const skinFolder = this.meshGui.addFolder('👤 Soft Tissue');
+    this.skinFolder = this.meshGui.addFolder('👤 Soft Tissue');
+    const skinFolder = this.skinFolder;
     this.skinVisController = makeBold(skinFolder.add(this.meshManager, 'skinVisible').name('Visible')).onChange((v) => {
       this.setSkinVisible(v);
     });
@@ -861,7 +875,8 @@ export class UIManager {
     skinFolder.addColor(this.meshManager, 'skinColor').name('Tissue Color').onChange(() => this.meshManager.updateSkinMaterial());
 
     // 4. ARTERIAL STRUCTURES MESH
-    const arterialFolder = this.meshGui.addFolder('🩸 Arterial Structures');
+    this.arterialFolder = this.meshGui.addFolder('🩸 Arterial Structures');
+    const arterialFolder = this.arterialFolder;
     this.arterialVisController = makeBold(arterialFolder.add(this.meshManager, 'arterialVisible').name('Visible')).onChange((v) => {
       this.setArterialVisible(v);
     });
@@ -873,7 +888,8 @@ export class UIManager {
     arterialFolder.addColor(this.meshManager, 'arterialColor').name('Color').onChange(() => this.meshManager.updateArterialMaterial());
 
     // 5. VENOUS STRUCTURES MESH
-    const venousFolder = this.meshGui.addFolder('🫐 Venous Structures');
+    this.venousFolder = this.meshGui.addFolder('🫐 Venous Structures');
+    const venousFolder = this.venousFolder;
     this.venousVisController = makeBold(venousFolder.add(this.meshManager, 'venousVisible').name('Visible')).onChange((v) => {
       this.setVenousVisible(v);
     });
@@ -885,7 +901,8 @@ export class UIManager {
     venousFolder.addColor(this.meshManager, 'venousColor').name('Color').onChange(() => this.meshManager.updateVenousMaterial());
 
     // 6. VENTRICLES
-    const ventFolder = this.meshGui.addFolder('💧 Ventricles');
+    this.ventFolder = this.meshGui.addFolder('💧 Ventricles');
+    const ventFolder = this.ventFolder;
     this.ventriclesVisController = makeBold(ventFolder.add(this.meshManager, 'ventriclesVisible').name('Visible')).onChange((v) => {
       this.setVentriclesVisible(v);
     });
@@ -897,7 +914,8 @@ export class UIManager {
     ventFolder.addColor(this.meshManager, 'ventriclesColor').name('Color').onChange(() => this.meshManager.updateVentriclesMaterial());
 
     // 7. DURAL FOLDS MESH (falx_tentorium_mesh.obj)
-    const duralFolder = this.meshGui.addFolder('🛡️ Dural Folds');
+    this.duralFolder = this.meshGui.addFolder('🛡️ Dural Folds');
+    const duralFolder = this.duralFolder;
     this.duralVisController = makeBold(duralFolder.add(this.meshManager, 'duralFoldsVisible').name('Visible')).onChange((v) => {
       this.setDuralFoldsVisible(v);
     });
@@ -908,8 +926,8 @@ export class UIManager {
     duralFolder.add(this.meshManager, 'duralFoldsStyle', MESH_RENDER_STYLES).name('Style').onChange((v) => this.meshManager.setDuralFoldsStyle(v));
     duralFolder.addColor(this.meshManager, 'duralFoldsColor').name('Color').onChange(() => this.meshManager.updateDuralFoldsMaterial());
 
-    // 8. TRACTOGRAPHY (.trk / .trk.gz) - Listed higher than Custom Meshes
-    this.tractographyFolder = this.meshGui.addFolder('🧵 Tractography (.trk / .trk.gz)');
+    // 8. TRACTOGRAPHY (.trk / .trk.gz / .mat) - Listed higher than Custom Meshes
+    this.tractographyFolder = this.meshGui.addFolder('🧵 Tractography (.trk / .trk.gz / .mat)');
     this.setupTractographyControls(this.tractographyFolder);
 
     // 9. CUSTOM OBJ/PLY/STL MESHES
@@ -918,6 +936,7 @@ export class UIManager {
 
     // 10. ENVIRONMENT & VIEW
     const envFolder = this.meshGui.addFolder('🎨 Environment & View');
+    this.envFolder = envFolder;
     this.bgPresetController = envFolder.add(this, 'bgPreset', {
       'Dark (#121316)': 'dark',
       'Light (#ffffff)': 'light',
@@ -953,7 +972,8 @@ export class UIManager {
   }
 
   initVolumeGUI() {
-    const volFolder = this.volumeGui.addFolder('🔬 Synchronized Volumetric Slice');
+    this.volFolder = this.volumeGui.addFolder('🔬 Synchronized Volumetric Slice');
+    const volFolder = this.volFolder;
 
     const volumeOptions = {};
     for (const key of Object.keys(VOLUME_CONFIGS)) {
@@ -974,6 +994,14 @@ export class UIManager {
 
     this.sliceVisController = volFolder.add(this.clippingManager, 'sliceVisible').name('Show Imaging Slice').onChange((v) => {
       this.setSliceVisible(v);
+    });
+
+    volFolder.add(this.volumeManager, 'interpolate').name('Interpolate Volume').onChange((v) => {
+      this.volumeManager.setInterpolate(v);
+      this.clippingManager.update();
+      if (this.multiplanarViewer && this.multiplanarViewer.isOpen) {
+        this.multiplanarViewer.update();
+      }
     });
 
     // Raw windowing sliders (displayed in raw intensity units)
@@ -1585,6 +1613,11 @@ export class UIManager {
         contourFolder.close();
       }
 
+      // Create 3D Mesh button for volumetric overlays
+      if (ov.type === 'volume') {
+        folder.add({ fn: () => this.openCreateMeshModal(ov) }, 'fn').name('✨ Create 3D Mesh...');
+      }
+
       // Trash / Remove button
       folder.add({ fn: () => this.volumeManager.removeOverlay(ov.id) }, 'fn').name('🗑️ Remove Overlay');
       folder.close();
@@ -1737,6 +1770,16 @@ export class UIManager {
         btnText.textContent = `${selected.length} selected`;
       }
     };
+
+    this.refreshBrainStructures = () => {
+      for (const struct of ADDITIONAL_BRAIN_STRUCTURES) {
+        if (checkboxes[struct.id]) {
+          checkboxes[struct.id].checked = !!this.meshManager.additionalBrainStructures[struct.id]?.enabled;
+        }
+      }
+      updateButtonSummary();
+    };
+    this._updateBrainStructuresSummary = updateButtonSummary;
 
     const colorSwatches = {};
     const swatchDots = {};
@@ -2469,6 +2512,8 @@ export class UIManager {
 
   setupTractographyControls(folder) {
     if (!folder) return;
+    const folderChildren = folder.domElement.querySelector('.children') || folder.domElement;
+    folderChildren.querySelectorAll('.custom-multiselect-controller').forEach((el) => el.remove());
     folder.children.slice().forEach((c) => c.destroy());
 
     // 1. Multiselect checklist for tract bundles
@@ -2790,6 +2835,10 @@ export class UIManager {
     updateButtonSummary();
     updateBadges();
 
+    this._renderTractList = renderTractList;
+    this._updateTractSummary = updateButtonSummary;
+    this._updateTractBadges = updateBadges;
+
     // Register manager update listener
     this.tractographyManager.onUpdate(() => {
       for (const tract of this.tractographyManager.getAllTracts()) {
@@ -2858,7 +2907,6 @@ export class UIManager {
     });
 
     // Append multiselect to folder
-    const folderChildren = folder.domElement.querySelector('.children') || folder.domElement;
     folderChildren.appendChild(container);
 
     // 2. Global controls in Lil-GUI
@@ -2879,11 +2927,9 @@ export class UIManager {
 
     const updateCtrlVisibility = () => {
       const mode = this.tractographyManager.colorMode;
-      const isSolid = (mode === 'solid');
       const isColormap = (mode === 'colormap' || mode === 'orientation');
       const isRgb = (this.tractographyManager.colormap === 'rgb');
 
-      if (solidColorCtrl) solidColorCtrl.show(isSolid);
       if (colormapCtrl) colormapCtrl.show(isColormap);
       if (metricCtrl) metricCtrl.show(isColormap && !isRgb);
       const showContrast = isColormap;
@@ -2894,18 +2940,15 @@ export class UIManager {
 
     folder.add(this.tractographyManager, 'colorMode', {
       'Colormap / Directional': 'colormap',
-      'Solid Color': 'solid'
+      'Tract Colors': 'solid'
     }).name('Color Mode').onChange((mode) => {
       this.tractographyManager.setColorMode(mode);
       updateCtrlVisibility();
     });
 
-    solidColorCtrl = folder.addColor(this.tractographyManager, 'solidColor').name('Solid Color').onChange((hex) => {
-      this.tractographyManager.setSolidColor(hex);
-    });
-
     colormapCtrl = folder.add(this.tractographyManager, 'colormap', {
       'RGB': 'rgb',
+      'Lead-DBS Colorbar': 'leaddbs',
       'Rocket': 'rocket',
       'Turbo': 'turbo',
       'Viridis': 'viridis',
@@ -2927,6 +2970,7 @@ export class UIManager {
     });
 
     metricCtrl = folder.add(this.tractographyManager, 'colormapMetric', {
+      'Streamline Values / Effect Size': 'vals',
       'Principal Direction (LR → AP → IS)': 'principal',
       'Inferior - Superior (Z)': 'is',
       'Anterior - Posterior (Y)': 'ap',
@@ -2935,7 +2979,16 @@ export class UIManager {
       'Streamline Length': 'length'
     }).name('Gradient Metric').onChange((m) => {
       this.tractographyManager.setColormapMetric(m);
+      if (m === 'vals') {
+        if (!this.tractographyManager.customColormapTable) {
+          this.openColorbarFilePicker();
+        }
+      }
     });
+
+    folder.add({
+      loadColorbar: () => this.openColorbarFilePicker()
+    }, 'loadColorbar').name('🎨 Load Colorbar (.svg)...');
 
     minCtrl = folder.add(this.tractographyManager, 'contrastMin', 0.0, 1.0, 0.01).name('Colormap Min').onChange((v) => {
       this.tractographyManager.setContrastMin(v);
@@ -2968,25 +3021,103 @@ export class UIManager {
       this.tractographyManager.setSubsample(parseInt(sub, 10));
     });
 
-    // Custom TRK upload trigger
+    // Custom TRK / Lead-DBS MAT upload trigger
     const fileTrigger = {
-      chooseFile: () => {
+      chooseFile: async () => {
+        if (window.showOpenFilePicker) {
+          try {
+            const pickerOpts = {
+              types: [{
+                description: 'Tractography (.trk, .trk.gz, .mat)',
+                accept: {
+                  'application/octet-stream': ['.trk', '.trk.gz', '.mat']
+                }
+              }],
+              multiple: false
+            };
+            if (this._lastFileHandle) pickerOpts.startIn = this._lastFileHandle;
+            const [fileHandle] = await window.showOpenFilePicker(pickerOpts);
+            if (fileHandle) {
+              this._lastFileHandle = fileHandle;
+              const f = await fileHandle.getFile();
+              const name = f.name.toLowerCase();
+              if (name.endsWith('.mat')) {
+                this.showProgressModal('Loading Lead-DBS Tractogram...', `Processing ${f.name}...`, 0.1);
+                try {
+                  await this.tractographyManager.loadLeadDBSFromFile(f, (p) => {
+                    this.updateProgressModal({ progress: p.progress, message: p.message });
+                  });
+                  this.setTractsVisible(true);
+                  this.refreshTractMultiselect();
+                  this.switchTab('meshes');
+                  folder.open();
+                } catch (err) {
+                  alert(`Error loading ${f.name}: ${err.message}`);
+                } finally {
+                  this.hideProgressModal();
+                }
+              } else if (name.endsWith('.trk') || name.endsWith('.trk.gz') || name.endsWith('.gz')) {
+                this.showProgressModal('Loading Tractogram...', `Processing ${f.name}...`, 0.1);
+                try {
+                  await this.tractographyManager.loadTRKFromFile(f, (p) => {
+                    this.updateProgressModal({ progress: p.progress, message: p.message });
+                  });
+                  this.setTractsVisible(true);
+                  this.refreshTractMultiselect();
+                  this.switchTab('meshes');
+                  folder.open();
+                } catch (err) {
+                  alert(`Error loading ${f.name}: ${err.message}`);
+                } finally {
+                  this.hideProgressModal();
+                }
+              }
+              return;
+            }
+          } catch (err) {
+            if (err.name === 'AbortError') return;
+          }
+        }
+
         const input = document.createElement('input');
         input.type = 'file';
-        input.accept = '.trk,.trk.gz,.gz,application/gzip,application/x-gzip,application/octet-stream';
+        input.accept = '.trk,.trk.gz,.gz,.mat,application/gzip,application/x-gzip,application/octet-stream';
         input.onchange = async (e) => {
           if (e.target.files && e.target.files[0]) {
             const f = e.target.files[0];
             const name = f.name.toLowerCase();
-            if (name.endsWith('.trk') || name.endsWith('.trk.gz') || name.endsWith('.gz')) {
-              await this.tractographyManager.loadTRKFromFile(f);
-              renderTractList();
-              updateButtonSummary();
-              updateBadges();
-              this.switchTab('meshes');
-              folder.open();
+            if (name.endsWith('.mat')) {
+              this.showProgressModal('Loading Lead-DBS Tractogram...', `Processing ${f.name}...`, 0.1);
+              try {
+                await this.tractographyManager.loadLeadDBSFromFile(f, (p) => {
+                  this.updateProgressModal({ progress: p.progress, message: p.message });
+                });
+                this.setTractsVisible(true);
+                this.refreshTractMultiselect();
+                this.switchTab('meshes');
+                folder.open();
+              } catch (err) {
+                alert(`Error loading ${f.name}: ${err.message}`);
+              } finally {
+                this.hideProgressModal();
+              }
+            } else if (name.endsWith('.trk') || name.endsWith('.trk.gz') || name.endsWith('.gz')) {
+              this.showProgressModal('Loading Tractogram...', `Processing ${f.name}...`, 0.1);
+              try {
+                await this.tractographyManager.loadTRKFromFile(f, (p) => {
+                  this.updateProgressModal({ progress: p.progress, message: p.message });
+                });
+                this.setTractsVisible(true);
+                this.refreshTractMultiselect();
+                this.switchTab('meshes');
+                folder.open();
+              } catch (err) {
+                alert(`Error loading ${f.name}: ${err.message}`);
+              } finally {
+                this.hideProgressModal();
+              }
             } else {
-              alert('Please select a valid TrackVis .trk or .trk.gz file.');
+              alert('Please select a valid TrackVis .trk, .trk.gz, or Lead-DBS .mat file.');
             }
           }
         };
@@ -2994,7 +3125,7 @@ export class UIManager {
       }
     };
 
-    folder.add(fileTrigger, 'chooseFile').name('📁 Load Custom .trk / .trk.gz');
+    folder.add(fileTrigger, 'chooseFile').name('📁 Load Custom .trk / .mat');
 
     folder.add({
       clearAll: () => {
@@ -3004,6 +3135,16 @@ export class UIManager {
         updateBadges();
       }
     }, 'clearAll').name('❌ Clear All Tracts');
+  }
+
+  refreshTractMultiselect() {
+    if (this._renderTractList) {
+      this._renderTractList();
+      if (this._updateTractSummary) this._updateTractSummary();
+      if (this._updateTractBadges) this._updateTractBadges();
+    } else if (this.tractographyFolder) {
+      this.setupTractographyControls(this.tractographyFolder);
+    }
   }
 
   rebuildCustomMeshesFolder() {
@@ -3018,7 +3159,7 @@ export class UIManager {
       <div class="dropzone-card">
         <div class="dropzone-icon">📥</div>
         <div class="dropzone-title">Drop File to Load</div>
-        <div class="dropzone-desc">Accepts <strong>.obj, .mz3, .gii, .ply, .stl</strong> 3D meshes, <strong>.trk / .trk.gz</strong> tractography, or <strong>.nii / .gii</strong> overlays</div>
+        <div class="dropzone-desc">Accepts <strong>.obj, .mz3, .gii, .ply, .stl</strong> 3D meshes, <strong>.trk / .trk.gz / .mat</strong> tractography, or <strong>.nii / .gii</strong> overlays</div>
       </div>
     `;
     document.body.appendChild(dropOverlay);
@@ -3040,42 +3181,94 @@ export class UIManager {
 
       if (!e.dataTransfer || !e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
 
-      const file = e.dataTransfer.files[0];
-      const name = file.name.toLowerCase();
+      const files = Array.from(e.dataTransfer.files);
+      const matFile = files.find(f => f.name.toLowerCase().endsWith('.mat'));
+      const trkFile = files.find(f => f.name.toLowerCase().endsWith('.trk') || f.name.toLowerCase().endsWith('.trk.gz'));
+      const svgFile = files.find(f => f.name.toLowerCase().endsWith('.svg'));
+      const niiFile = files.find(f => f.name.toLowerCase().endsWith('.nii') || f.name.toLowerCase().endsWith('.nii.gz'));
+      const meshFile = files.find(f => {
+        const n = f.name.toLowerCase();
+        return n.endsWith('.obj') || n.endsWith('.mz3') || n.endsWith('.ply') || n.endsWith('.ply.gz') || n.endsWith('.stl') || n.endsWith('.stl.gz') || n.endsWith('.gii') || n.endsWith('.gii.gz');
+      });
 
       try {
-        if (name.endsWith('.gii') || name.endsWith('.gii.gz')) {
-          const buffer = await file.arrayBuffer();
-          if (isGIIScalarFile(buffer)) {
-            await this.volumeManager.loadGIIOverlayFromFile(file, this.meshManager);
-            this.switchTab('overlays');
-          } else {
-            await this.meshManager.loadCustomMesh(file);
-            this.switchTab('meshes');
-          }
-        } else if (name.endsWith('.obj') || name.endsWith('.mz3') ||
-            name.endsWith('.ply') || name.endsWith('.ply.gz') || name.endsWith('.stl') || name.endsWith('.stl.gz')) {
-          await this.meshManager.loadCustomMesh(file);
-          this.switchTab('meshes');
-        } else if (name.endsWith('.trk') || name.endsWith('.trk.gz')) {
+        if (matFile) {
           if (this.tractographyManager) {
-            await this.tractographyManager.loadTRKFromFile(file);
-            this.setupTractographyControls(this.tractographyFolder);
-            this.switchTab('meshes');
-            if (this.tractographyFolder) this.tractographyFolder.open();
+            this.showProgressModal('Loading Lead-DBS Tractogram...', `Processing ${matFile.name}...`, 0.1);
+            try {
+              await this.tractographyManager.loadLeadDBSFromFile(matFile, (p) => {
+                this.updateProgressModal({ progress: p.progress, message: p.message });
+              });
+              if (svgFile) {
+                this.updateProgressModal({ progress: 0.95, message: `Loading colorbar from ${svgFile.name}...` });
+                await this.tractographyManager.loadColorbarSVGFromFile(svgFile);
+              }
+              this.setTractsVisible(true);
+              this.refreshTractMultiselect();
+              this.switchTab('meshes');
+              if (this.tractographyFolder) this.tractographyFolder.open();
+            } finally {
+              this.hideProgressModal();
+            }
           }
-        } else if (name.endsWith('.nii') || name.endsWith('.nii.gz') || name.endsWith('.gz')) {
-          await this.volumeManager.loadOverlayFromFile(file);
-          // Ensure clipping is enabled so user immediately sees the overlay on the cut plane
+        } else if (trkFile) {
+          if (this.tractographyManager) {
+            this.showProgressModal('Loading Tractogram...', `Processing ${trkFile.name}...`, 0.1);
+            try {
+              await this.tractographyManager.loadTRKFromFile(trkFile, (p) => {
+                this.updateProgressModal({ progress: p.progress, message: p.message });
+              });
+              if (svgFile) {
+                this.updateProgressModal({ progress: 0.95, message: `Loading colorbar from ${svgFile.name}...` });
+                await this.tractographyManager.loadColorbarSVGFromFile(svgFile);
+              }
+              this.setTractsVisible(true);
+              this.refreshTractMultiselect();
+              this.switchTab('meshes');
+              if (this.tractographyFolder) this.tractographyFolder.open();
+            } finally {
+              this.hideProgressModal();
+            }
+          }
+        } else if (svgFile) {
+          if (this.tractographyManager) {
+            this.showProgressModal('Loading Colorbar...', `Parsing ${svgFile.name}...`, 0.3);
+            try {
+              await this.tractographyManager.loadColorbarSVGFromFile(svgFile);
+              this.refreshTractMultiselect();
+              this.switchTab('meshes');
+              if (this.tractographyFolder) this.tractographyFolder.open();
+            } finally {
+              this.hideProgressModal();
+            }
+          }
+        } else if (niiFile) {
+          await this.volumeManager.loadOverlayFromFile(niiFile);
           if (!this.clippingManager.globalEnabled) {
             this.clippingManager.planes[0].enabled = true;
             this.setClippingEnabled(true);
           }
           this.switchTab('overlays');
+        } else if (meshFile) {
+          const n = meshFile.name.toLowerCase();
+          if (n.endsWith('.gii') || n.endsWith('.gii.gz')) {
+            const buffer = await meshFile.arrayBuffer();
+            if (isGIIScalarFile(buffer)) {
+              await this.volumeManager.loadGIIOverlayFromFile(meshFile, this.meshManager);
+              this.switchTab('overlays');
+            } else {
+              await this.meshManager.loadCustomMesh(meshFile);
+              this.switchTab('meshes');
+            }
+          } else {
+            await this.meshManager.loadCustomMesh(meshFile);
+            this.switchTab('meshes');
+          }
         } else {
-          alert('Unsupported file format. Please drop a .obj, .mz3, .gii, .ply, .stl mesh, .trk / .trk.gz tractography, or .nii / .gii overlay.');
+          alert('Unsupported file format. Please drop a .obj, .mz3, .gii, .ply, .stl mesh, .trk / .trk.gz / .mat tractography, .svg colorbar, or .nii / .gii overlay.');
         }
       } catch (err) {
+        this.hideProgressModal();
         alert(`Error loading dropped file: ${err.message}`);
       }
     });
@@ -3083,6 +3276,13 @@ export class UIManager {
 
   initKeyboardShortcuts() {
     window.addEventListener('keydown', (e) => {
+      // Global Search shortcut (/ or Cmd+K / Ctrl+K)
+      if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && !['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName))) {
+        e.preventDefault();
+        this.openStructureSearchModal();
+        return;
+      }
+
       if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
 
       switch (e.key.toLowerCase()) {
@@ -3162,4 +3362,715 @@ export class UIManager {
       }
     });
   }
+
+  /**
+   * Opens the Create 3D Mesh dialog for a NIfTI volumetric overlay
+   */
+  openCreateMeshModal(overlay) {
+    if (!overlay || overlay.type !== 'volume' || !overlay.rawOverlayData) {
+      alert('Only 3D NIfTI volumetric overlays can be converted into 3D meshes.');
+      return;
+    }
+
+    const existing = document.getElementById('mesh-creator-backdrop');
+    if (existing) existing.remove();
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'mesh-creator-modal-backdrop';
+    backdrop.id = 'mesh-creator-backdrop';
+
+    const modal = document.createElement('div');
+    modal.className = 'mesh-creator-modal';
+
+    const dims = overlay.dims || [0, 0, 0];
+    const rawMin = overlay.rawMin !== undefined ? overlay.rawMin : 0;
+    const rawMax = overlay.rawMax !== undefined ? overlay.rawMax : 1;
+    let defaultThreshold = overlay.posMin !== undefined && overlay.posMin > rawMin && overlay.posMin < rawMax
+      ? overlay.posMin
+      : parseFloat(((rawMin + rawMax) * 0.5).toFixed(2));
+    if (defaultThreshold <= rawMin || defaultThreshold >= rawMax) {
+      defaultThreshold = parseFloat((rawMin + 0.5 * (rawMax - rawMin)).toFixed(2));
+    }
+
+    const baseCleanName = (overlay.name || 'overlay').replace(/\.nii(\.gz)?$/i, '').replace(/[^a-zA-Z0-9_\-\.]/g, '_');
+    const defaultName = `${baseCleanName}_mesh`;
+    const rangeSpan = Math.max(1e-4, rawMax - rawMin);
+    const stepSize = rangeSpan > 50 ? 0.5 : (rangeSpan > 5 ? 0.1 : 0.01);
+
+    modal.innerHTML = `
+      <div class="mesh-creator-header">
+        <div class="mesh-creator-title-group">
+          <span class="mesh-creator-icon">✨</span>
+          <span class="mesh-creator-title">Create 3D Mesh from NIfTI</span>
+        </div>
+        <button type="button" class="mesh-creator-close-btn" id="btn-mesh-creator-close" title="Close (Esc)">✕</button>
+      </div>
+      <div class="mesh-creator-body">
+        <div class="mesh-creator-info">
+          <div class="mesh-creator-row">
+            <span class="mesh-creator-label">Overlay Source:</span>
+            <span class="mesh-creator-value" style="color: #cbd5e1; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${overlay.name}</span>
+          </div>
+          <div class="mesh-creator-row">
+            <span class="mesh-creator-label">Volume Grid:</span>
+            <span class="mesh-creator-value">${dims[0]} × ${dims[1]} × ${dims[2]} voxels</span>
+          </div>
+          <div class="mesh-creator-row">
+            <span class="mesh-creator-label">Data Range:</span>
+            <span class="mesh-creator-value">[${rawMin.toFixed(2)}, ${rawMax.toFixed(2)}]</span>
+          </div>
+        </div>
+
+        <div class="mesh-creator-section">
+          <label class="mesh-creator-input-label" for="mc-threshold-slider">Threshold Value (Isovalue Cutoff):</label>
+          <div class="mesh-creator-slider-row">
+            <input type="range" class="mesh-creator-slider" id="mc-threshold-slider"
+              min="${rawMin}" max="${rawMax}" step="${stepSize}" value="${defaultThreshold}">
+            <input type="number" class="mesh-creator-number" id="mc-threshold-number"
+              min="${rawMin}" max="${rawMax}" step="${stepSize}" value="${defaultThreshold}">
+          </div>
+          <span class="mesh-creator-hint">Voxels with intensity ≥ threshold are binarized and meshed into an in-memory 3D surface.</span>
+        </div>
+
+        <div class="mesh-creator-section">
+          <label class="mesh-creator-input-label" for="mc-name-input">Mesh Name:</label>
+          <input type="text" class="mesh-creator-text-input" id="mc-name-input" value="${defaultName}">
+        </div>
+
+        <div class="mesh-creator-section">
+          <label class="mesh-creator-input-label" for="mc-color-input">Surface Color:</label>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="color" id="mc-color-input" value="#38bdf8" style="cursor: pointer; width: 38px; height: 28px; border: none; border-radius: 4px; background: transparent;">
+            <span class="mesh-creator-hint" id="mc-color-label">#38bdf8</span>
+          </div>
+        </div>
+
+        <div class="mesh-creator-status" id="mc-status-text"></div>
+      </div>
+
+      <div class="mesh-creator-footer">
+        <button type="button" class="mesh-creator-btn btn-secondary" id="btn-mesh-creator-cancel">Cancel</button>
+        <button type="button" class="mesh-creator-btn btn-primary" id="btn-mesh-creator-create">Create 3D Mesh</button>
+      </div>
+    `;
+
+    backdrop.appendChild(modal);
+    document.body.appendChild(backdrop);
+
+    const slider = modal.querySelector('#mc-threshold-slider');
+    const numInput = modal.querySelector('#mc-threshold-number');
+    const nameInput = modal.querySelector('#mc-name-input');
+    const colorInput = modal.querySelector('#mc-color-input');
+    const colorLabel = modal.querySelector('#mc-color-label');
+    const statusText = modal.querySelector('#mc-status-text');
+    const btnCancel = modal.querySelector('#btn-mesh-creator-cancel');
+    const btnClose = modal.querySelector('#btn-mesh-creator-close');
+    const btnCreate = modal.querySelector('#btn-mesh-creator-create');
+
+    const closeModal = () => {
+      window.removeEventListener('keydown', onKey);
+      backdrop.remove();
+    };
+
+    const onKey = (e) => {
+      if (e.key === 'Escape') closeModal();
+    };
+    window.addEventListener('keydown', onKey);
+
+    slider.addEventListener('input', (e) => {
+      numInput.value = e.target.value;
+    });
+
+    numInput.addEventListener('input', (e) => {
+      slider.value = e.target.value;
+    });
+
+    colorInput.addEventListener('input', (e) => {
+      colorLabel.textContent = e.target.value;
+    });
+
+    btnCancel.addEventListener('click', closeModal);
+    btnClose.addEventListener('click', closeModal);
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) closeModal();
+    });
+
+    btnCreate.addEventListener('click', () => {
+      const thresholdVal = parseFloat(numInput.value);
+      if (isNaN(thresholdVal)) {
+        statusText.textContent = 'Please enter a valid numeric threshold.';
+        statusText.style.color = '#ef4444';
+        return;
+      }
+
+      const meshName = nameInput.value.trim() || defaultName;
+      const colorHex = colorInput.value || '#38bdf8';
+
+      btnCreate.disabled = true;
+      btnCancel.disabled = true;
+      statusText.textContent = '⏳ Generating 3D mesh (marching cubes)...';
+      statusText.style.color = '#38bdf8';
+
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          try {
+            const geom = generateMeshFromVolume(overlay.rawOverlayData, overlay.dims, overlay.affine, thresholdVal, 1);
+            if (!geom || geom.getAttribute('position').count === 0) {
+              statusText.textContent = `⚠️ No surface found at threshold ${thresholdVal.toFixed(2)}. Try adjusting the threshold within [${rawMin.toFixed(2)}, ${rawMax.toFixed(2)}].`;
+              statusText.style.color = '#f59e0b';
+              btnCreate.disabled = false;
+              btnCancel.disabled = false;
+              return;
+            }
+
+            const customEntry = this.meshManager._registerCustomMesh(geom, meshName);
+            if (customEntry) {
+              const hexNum = parseInt(colorHex.replace('#', '0x'), 16);
+              customEntry.color = hexNum;
+              if (customEntry.material && customEntry.material.color) {
+                customEntry.material.color.setHex(hexNum);
+              }
+              customEntry.visible = true;
+              if (customEntry.mesh) customEntry.mesh.visible = true;
+            }
+
+            closeModal();
+            this.switchTab('meshes');
+            if (this.customMeshFolder) this.customMeshFolder.open();
+          } catch (err) {
+            statusText.textContent = `Error generating mesh: ${err.message}`;
+            statusText.style.color = '#ef4444';
+            btnCreate.disabled = false;
+            btnCancel.disabled = false;
+          }
+        }, 30);
+      });
+    });
+  }
+
+  /**
+   * Builds an index of all searchable structures, meshes, tracts, bones, and overlays
+   */
+  buildSearchIndex() {
+    const items = [];
+
+    // 1. Brain Surface Meshes
+    items.push({
+      id: 'brain_pial',
+      category: 'Brain Surface',
+      icon: '🧠',
+      title: 'Pial Cortex (Gray Matter Surface)',
+      subtitle: 'Cerebral cortex surface model with velvet shader',
+      keywords: 'cortex gray matter cerebrum hemisphere velvet brain surface pial',
+      tab: 'meshes',
+      folder: this.brainFolder,
+      action: () => {
+        this.setBrainVisible(true);
+        if (this.brainFolder) this.brainFolder.open();
+      }
+    });
+
+    // 2. Additional Brain Structures (Subcortical & Brainstem)
+    if (ADDITIONAL_BRAIN_STRUCTURES) {
+      ADDITIONAL_BRAIN_STRUCTURES.forEach(struct => {
+        items.push({
+          id: struct.id,
+          category: 'Subcortical Structure',
+          icon: '🧠',
+          title: struct.name,
+          subtitle: `Subcortical brain mesh (${struct.shortName || struct.name})`,
+          keywords: `brain subcortical basal ganglia thalamus brainstem nucleus ${struct.name} ${struct.shortName || ''} ${struct.id}`,
+          tab: 'meshes',
+          folder: this.brainFolder,
+          action: async () => {
+            this.switchTab('meshes');
+            await this.meshManager.toggleAdditionalBrainStructure(struct.id, true);
+            const cb = document.getElementById(`ms-check-${struct.id}`);
+            if (cb) cb.checked = true;
+            if (this.additionalBrainStructuresWidget?.setCheckboxes) {
+              this.additionalBrainStructuresWidget.setCheckboxes({ [struct.id]: true });
+            }
+            if (this.refreshBrainStructures) this.refreshBrainStructures();
+            this.setBrainVisible(true);
+            if (this.brainFolder) {
+              this.brainFolder.open();
+              setTimeout(() => {
+                if (this.additionalBrainStructuresWidget?.container) {
+                  this.additionalBrainStructuresWidget.container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+              }, 60);
+            }
+          }
+        });
+      });
+    }
+
+    // 3. Skull & Bones
+    items.push({
+      id: 'skull_monolithic',
+      category: 'Skull Bone',
+      icon: '💀',
+      title: 'Full Skull (Monolithic)',
+      subtitle: 'Complete cranium and facial skeleton',
+      keywords: 'skull cranium bone head monolithic',
+      tab: 'meshes',
+      folder: this.skullFolder,
+      action: async () => {
+        if (this.skullModelController) this.skullModelController.setValue('full');
+        this.setSkullVisible(true);
+        if (this.skullFolder) this.skullFolder.open();
+      }
+    });
+
+    if (SKULL_SUBSTRUCTURES) {
+      const catLabels = {
+        'mandible_cervical': 'Mandible & Cervical',
+        'cranial': 'Cranial Bone',
+        'face': 'Facial Bone'
+      };
+      SKULL_SUBSTRUCTURES.forEach(bone => {
+        items.push({
+          id: bone.id,
+          category: catLabels[bone.category] || 'Skull Sub-bone',
+          icon: '💀',
+          title: bone.name,
+          subtitle: `Ohio Skull anatomical sub-bone (${bone.shortName || bone.name})`,
+          keywords: `skull bone ${catLabels[bone.category] || ''} ${bone.name} ${bone.shortName || ''} ${bone.id}`,
+          tab: 'meshes',
+          folder: this.skullFolder,
+          action: async () => {
+            if (this.meshManager.currentSkullType !== 'ohio' && this.skullModelController) {
+              this.skullModelController.setValue('ohio');
+            }
+            await this.meshManager.setSkullSubstructureEnabled(bone.id, true);
+            const cb = document.getElementById(`ms-check-skull-${bone.id}`);
+            if (cb) cb.checked = true;
+            if (this.refreshSkullSubstructures) this.refreshSkullSubstructures();
+            this.setSkullVisible(true);
+            if (this.skullFolder) this.skullFolder.open();
+          }
+        });
+      });
+    }
+
+    // 4. Soft Tissue
+    items.push({
+      id: 'skin_soft_tissue',
+      category: 'Soft Tissue',
+      icon: '👤',
+      title: 'Soft Tissue (Skin & Scalp)',
+      subtitle: 'External head and facial soft tissue mesh',
+      keywords: 'skin scalp soft tissue face head',
+      tab: 'meshes',
+      folder: this.skinFolder,
+      action: () => {
+        this.setSkinVisible(true);
+        if (this.skinFolder) this.skinFolder.open();
+      }
+    });
+
+    // 5. Vascular & Ventricles & Dura
+    items.push({
+      id: 'arterial_vasculature',
+      category: 'Vasculature',
+      icon: '🫀',
+      title: 'Arterial Vasculature',
+      subtitle: 'Circle of Willis and cerebral arteries',
+      keywords: 'artery arterial circle of willis carotids basilar vasculature vessels',
+      tab: 'meshes',
+      folder: this.arterialFolder,
+      action: () => {
+        this.setArterialVisible(true);
+        if (this.arterialFolder) this.arterialFolder.open();
+      }
+    });
+
+    items.push({
+      id: 'venous_vasculature',
+      category: 'Vasculature',
+      icon: '🩸',
+      title: 'Venous Vasculature',
+      subtitle: 'Dural venous sinuses and cerebral veins',
+      keywords: 'vein venous sagittal sinus transverse sigmoid jugular vessels',
+      tab: 'meshes',
+      folder: this.venousFolder,
+      action: () => {
+        this.setVenousVisible(true);
+        if (this.venousFolder) this.venousFolder.open();
+      }
+    });
+
+    items.push({
+      id: 'ventricles_csf',
+      category: 'Fluid Spaces',
+      icon: '💧',
+      title: 'Ventricles (Ventricular System)',
+      subtitle: 'Lateral, third, fourth ventricles and CSF pathways',
+      keywords: 'ventricle ventricles csf cerebrospinal fluid lateral third fourth choroid',
+      tab: 'meshes',
+      folder: this.ventFolder,
+      action: () => {
+        this.setVentriclesVisible(true);
+        if (this.ventFolder) this.ventFolder.open();
+      }
+    });
+
+    items.push({
+      id: 'dural_folds',
+      category: 'Meninges',
+      icon: '🛡️',
+      title: 'Dural Folds (Falx & Tentorium)',
+      subtitle: 'Falx cerebri and tentorium cerebelli',
+      keywords: 'dura dural folds falx cerebri tentorium cerebelli meninges',
+      tab: 'meshes',
+      folder: this.duralFolder,
+      action: () => {
+        this.setDuralFoldsVisible(true);
+        if (this.duralFolder) this.duralFolder.open();
+      }
+    });
+
+    // 6. Tractography Bundles
+    if (this.tractographyManager) {
+      const allTracts = this.tractographyManager.getAllTracts();
+      allTracts.forEach(tract => {
+        items.push({
+          id: tract.id,
+          category: `Tract: ${tract.categoryName || tract.category || 'White Matter'}`,
+          icon: '🧵',
+          title: tract.name,
+          subtitle: `White matter fiber tract (${tract.shortName || tract.name})`,
+          keywords: `tract tractography streamline white matter fibers nerve ${tract.name} ${tract.shortName || ''} ${tract.id}`,
+          tab: 'meshes',
+          folder: this.tractographyFolder,
+          action: async () => {
+            await this.tractographyManager.setTractEnabled(tract.id, true);
+            this.setTractsVisible(true);
+            const cb = document.getElementById(`ms-check-tract-${tract.id}`);
+            if (cb) cb.checked = true;
+            this.refreshTractMultiselect();
+            if (this.tractographyFolder) this.tractographyFolder.open();
+          }
+        });
+      });
+    }
+
+    // 7. Base MRI Volumes
+    for (const [key, cfg] of Object.entries(VOLUME_CONFIGS)) {
+      items.push({
+        id: key,
+        category: 'MRI Volume / Atlas',
+        icon: '🔬',
+        title: cfg.label || key,
+        subtitle: `Volumetric template/atlas (${key})`,
+        keywords: `volume atlas mri contrast mni bigbrain histology tissue structure substructure ${cfg.label || ''} ${key}`,
+        tab: 'volumes',
+        folder: this.volFolder,
+        action: async () => {
+          await this.switchBaseVolume(key);
+          if (this.volFolder) this.volFolder.open();
+        }
+      });
+    }
+
+    // 8. Active Overlays
+    if (this.volumeManager && this.volumeManager.overlays) {
+      this.volumeManager.overlays.forEach((ov, idx) => {
+        items.push({
+          id: ov.id,
+          category: 'Overlay Map',
+          icon: ov.type === 'gifti_surface' ? '🎨' : '📊',
+          title: ov.name,
+          subtitle: `Active overlay [${idx + 1}] (${ov.type === 'volume' ? '3D NIfTI' : 'GIfTI Surface'})`,
+          keywords: `overlay nifti gifti statistical map ${ov.name} ${ov.id}`,
+          tab: 'overlays',
+          folder: null,
+          action: () => {
+            this.volumeManager.toggleOverlay(ov.id, true);
+          }
+        });
+      });
+    }
+
+    return items;
+  }
+
+  /**
+   * Opens the Structure Search modal dialog
+   */
+  openStructureSearchModal() {
+    const existing = document.getElementById('structure-search-backdrop');
+    if (existing) existing.remove();
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'structure-search-backdrop';
+    backdrop.id = 'structure-search-backdrop';
+
+    const modal = document.createElement('div');
+    modal.className = 'structure-search-modal';
+
+    modal.innerHTML = `
+      <div class="structure-search-header">
+        <div class="structure-search-input-wrap">
+          <div class="structure-search-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </div>
+          <input type="text" class="structure-search-input" id="structure-search-input"
+            placeholder="Search structures, meshes, tracts, bones, or atlases... (e.g. 'thalamus', 'optic', 'cst')" autocomplete="off" spellcheck="false">
+        </div>
+        <button type="button" class="structure-search-close-btn" id="btn-structure-search-close" title="Close (Esc)">✕</button>
+      </div>
+      <div class="structure-search-results" id="structure-search-results"></div>
+      <div class="structure-search-footer">
+        <span><kbd>↑</kbd> <kbd>↓</kbd> to navigate</span>
+        <span><kbd>↵</kbd> to select & open</span>
+        <span><kbd>esc</kbd> to dismiss</span>
+      </div>
+    `;
+
+    backdrop.appendChild(modal);
+    document.body.appendChild(backdrop);
+
+    const input = modal.querySelector('#structure-search-input');
+    const resultsContainer = modal.querySelector('#structure-search-results');
+    const closeBtn = modal.querySelector('#btn-structure-search-close');
+
+    const searchIndex = this.buildSearchIndex();
+    let selectedIndex = 0;
+    let filteredItems = searchIndex.slice(0, 25);
+
+    const closeModal = () => {
+      window.removeEventListener('keydown', onKey);
+      backdrop.remove();
+    };
+
+    const renderResults = () => {
+      resultsContainer.innerHTML = '';
+      if (filteredItems.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'structure-search-empty';
+        empty.innerHTML = `No structures found matching "<strong>${input.value.trim()}</strong>"`;
+        resultsContainer.appendChild(empty);
+        return;
+      }
+
+      filteredItems.forEach((item, idx) => {
+        const row = document.createElement('div');
+        row.className = 'structure-search-item';
+        if (idx === selectedIndex) row.classList.add('selected');
+
+        row.innerHTML = `
+          <div class="structure-search-item-main">
+            <span class="structure-search-item-icon">${item.icon || '📍'}</span>
+            <div class="structure-search-item-text">
+              <span class="structure-search-item-title">${item.title}</span>
+              <span class="structure-search-item-subtitle">${item.subtitle || ''}</span>
+            </div>
+          </div>
+          <span class="structure-search-item-badge">${item.category}</span>
+        `;
+
+        row.addEventListener('click', () => {
+          activateItem(item);
+        });
+
+        row.addEventListener('mouseenter', () => {
+          selectedIndex = idx;
+          updateSelectedClass();
+        });
+
+        resultsContainer.appendChild(row);
+      });
+
+      ensureSelectedVisible();
+    };
+
+    const updateSelectedClass = () => {
+      const rows = resultsContainer.querySelectorAll('.structure-search-item');
+      rows.forEach((r, idx) => {
+        r.classList.toggle('selected', idx === selectedIndex);
+      });
+    };
+
+    const ensureSelectedVisible = () => {
+      const selectedEl = resultsContainer.children[selectedIndex];
+      if (selectedEl && selectedEl.scrollIntoView) {
+        selectedEl.scrollIntoView({ block: 'nearest' });
+      }
+    };
+
+    const activateItem = async (item) => {
+      closeModal();
+      if (item.tab) {
+        this.switchTab(item.tab);
+      }
+      if (item.action) {
+        await item.action();
+      }
+      if (item.folder) {
+        item.folder.open();
+      }
+    };
+
+    const filterList = (query) => {
+      const q = query.trim().toLowerCase();
+      if (!q) {
+        filteredItems = searchIndex.slice(0, 25);
+      } else {
+        const terms = q.split(/\s+/).filter(Boolean);
+        filteredItems = searchIndex.filter(item => {
+          const haystack = `${item.title} ${item.subtitle || ''} ${item.category} ${item.keywords || ''}`.toLowerCase();
+          return terms.every(term => haystack.includes(term));
+        }).slice(0, 30);
+      }
+      selectedIndex = 0;
+      renderResults();
+    };
+
+    input.addEventListener('input', (e) => {
+      filterList(e.target.value);
+    });
+
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeModal();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (filteredItems.length > 0) {
+          selectedIndex = (selectedIndex + 1) % filteredItems.length;
+          updateSelectedClass();
+          ensureSelectedVisible();
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (filteredItems.length > 0) {
+          selectedIndex = (selectedIndex - 1 + filteredItems.length) % filteredItems.length;
+          updateSelectedClass();
+          ensureSelectedVisible();
+        }
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (filteredItems[selectedIndex]) {
+          activateItem(filteredItems[selectedIndex]);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', onKey);
+    closeBtn.addEventListener('click', closeModal);
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) closeModal();
+    });
+
+    renderResults();
+    requestAnimationFrame(() => input.focus());
+  }
+
+  /**
+   * Universal progress modal for file loading, decompression, and parsing
+   */
+  showProgressModal(title = 'Loading File...', message = 'Processing...', progress = 0.0, detail = '') {
+    const modal = document.getElementById('progress-modal');
+    if (!modal) return;
+    const titleEl = document.getElementById('progress-modal-title');
+    const statusEl = document.getElementById('progress-modal-status');
+    const fillEl = document.getElementById('progress-modal-fill');
+    const percentEl = document.getElementById('progress-modal-percent');
+    const detailEl = document.getElementById('progress-modal-detail');
+
+    if (titleEl) titleEl.textContent = title;
+    if (statusEl) statusEl.textContent = message;
+    const pct = Math.max(0, Math.min(100, Math.round((progress || 0) * 100)));
+    if (fillEl) fillEl.style.width = `${pct}%`;
+    if (percentEl) percentEl.textContent = `${pct}%`;
+    if (detailEl) detailEl.textContent = detail;
+
+    modal.classList.remove('hidden');
+  }
+
+  updateProgressModal({ progress, message, detail } = {}) {
+    const modal = document.getElementById('progress-modal');
+    if (!modal || modal.classList.contains('hidden')) return;
+    const statusEl = document.getElementById('progress-modal-status');
+    const fillEl = document.getElementById('progress-modal-fill');
+    const percentEl = document.getElementById('progress-modal-percent');
+    const detailEl = document.getElementById('progress-modal-detail');
+
+    if (message && statusEl) statusEl.textContent = message;
+    if (progress !== undefined && fillEl) {
+      const pct = Math.max(0, Math.min(100, Math.round(progress * 100)));
+      fillEl.style.width = `${pct}%`;
+      if (percentEl) percentEl.textContent = `${pct}%`;
+    }
+    if (detail !== undefined && detailEl) detailEl.textContent = detail;
+  }
+
+  hideProgressModal(delayMs = 350) {
+    const modal = document.getElementById('progress-modal');
+    if (!modal) return;
+    setTimeout(() => {
+      modal.classList.add('hidden');
+    }, delayMs);
+  }
+
+  /**
+   * Opens file picker for Lead-DBS Colorbar (.svg), pre-populated to the last folder if supported
+   */
+  async openColorbarFilePicker() {
+    if (!this.tractographyManager) return;
+
+    if (window.showOpenFilePicker) {
+      try {
+        const pickerOpts = {
+          types: [{
+            description: 'Lead-DBS Colorbar (.svg)',
+            accept: { 'image/svg+xml': ['.svg'] }
+          }],
+          multiple: false
+        };
+        if (this._lastFileHandle) pickerOpts.startIn = this._lastFileHandle;
+        const [fileHandle] = await window.showOpenFilePicker(pickerOpts);
+        if (fileHandle) {
+          this._lastFileHandle = fileHandle;
+          const file = await fileHandle.getFile();
+          this.showProgressModal('Loading Colorbar...', `Parsing ${file.name}...`, 0.3);
+          try {
+            await this.tractographyManager.loadColorbarSVGFromFile(file);
+            this.refreshTractMultiselect();
+          } catch (err) {
+            alert(`Error loading colorbar: ${err.message}`);
+          } finally {
+            this.hideProgressModal();
+          }
+          return;
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+      }
+    }
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.svg,image/svg+xml';
+    input.onchange = async (e) => {
+      if (e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        this.showProgressModal('Loading Colorbar...', `Parsing ${file.name}...`, 0.3);
+        try {
+          await this.tractographyManager.loadColorbarSVGFromFile(file);
+          this.refreshTractMultiselect();
+        } catch (err) {
+          alert(`Error loading colorbar: ${err.message}`);
+        } finally {
+          this.hideProgressModal();
+        }
+      }
+    };
+    input.click();
+  }
 }
+

@@ -1,30 +1,30 @@
 {
   "name": "arterial",
-  "sourcePath": "/Users/jiturner/Repositories/Standard/UBA167/manually_refined_again.obj",
-  "vertexCount": 34236,
-  "triangleCount": 68440,
+  "sourcePath": "/Users/jiturner/Repositories/Standard/UBA167/manually_refined_again_final.obj",
+  "vertexCount": 49120,
+  "triangleCount": 98268,
   "bounds": {
     "min": [
-      -44.88332,
-      -55.475132,
-      -84.990822
+      -44.501663,
+      -53.035439,
+      -84.935768
     ],
     "max": [
-      46.281677,
-      39.21793,
-      16.589937
+      45.506229,
+      38.696632,
+      15.506533
     ],
     "center": [
-      0.6991785000000021,
-      -8.128601,
-      -34.200442499999994
+      0.5022829999999985,
+      -7.169403499999998,
+      -34.714617499999996
     ],
     "size": [
-      91.164997,
-      94.693062,
-      101.580759
+      90.007892,
+      91.73207099999999,
+      100.442301
     ]
   },
-  "rawBytes": 1642960,
-  "compressedBytes": 1008007
+  "rawBytes": 2358112,
+  "compressedBytes": 1353587
 }

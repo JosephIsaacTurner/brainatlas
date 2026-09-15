@@ -104,13 +104,18 @@ def process_volume(name, config):
 
     flat_data = data.flatten(order='F') # Fortran order: i + j*nx + k*nx*ny
 
-    if name in ['volume_ct', 'volume_bigbrain']:
-        # CT continuous normalized float16 encoding preserves full floating-point precision
-        # in soft tissue (10-90 HU) preventing the 12-level posterization/chunky appearance.
-        # BigBrain continuous normalized float16 encoding preserves full 16-bit histology dynamic range
-        # without quantization banding and with raw unmasked intensities intact.
-        max_val_safe = max_val if max_val > 0 else 1.0
-        norm_data = np.clip(flat_data / max_val_safe, 0.0, 1.0).astype(np.float16)
+    if name in ['volume_ct', 'volume_bigbrain', 'volume_substructure']:
+        # CT: continuous normalized float16 preserves full HU precision in soft tissue.
+        # BigBrain: continuous normalized float16 preserves 16-bit histology dynamic range.
+        # Substructure atlas: discrete normalized float16 preserves all 352 discrete anatomical labels
+        # without uint8 quantization collisions (since 352 > 255).
+        if name == 'volume_substructure':
+            rounded_data = np.round(flat_data)
+            max_val_safe = 352.0
+            norm_data = np.clip(rounded_data / max_val_safe, 0.0, 1.0).astype(np.float16)
+        else:
+            max_val_safe = max_val if max_val > 0 else 1.0
+            norm_data = np.clip(flat_data / max_val_safe, 0.0, 1.0).astype(np.float16)
         data_bytes = norm_data.tobytes()
         format_type = 'float16'
         byte_length = int(norm_data.nbytes)

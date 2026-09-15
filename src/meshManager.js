@@ -1048,6 +1048,10 @@ export class MeshManager {
     this.updateAdditionalBrainStructuresClipping(clipped);
   }
 
+  async setAdditionalStructureEnabled(id, enabled) {
+    return this.toggleAdditionalBrainStructure(id, enabled);
+  }
+
   async toggleAdditionalBrainStructure(id, enabled) {
     const struct = this.additionalBrainStructures[id];
     if (!struct) return;

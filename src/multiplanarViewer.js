@@ -82,6 +82,10 @@ export class MultiplanarViewer {
           </div>
         </div>
         <div class="mp-header-actions">
+          <label class="mp-checkbox-label" title="Toggle Radiological Orientation (puts Left on Screen Right)">
+            <input type="checkbox" id="mp-radiological-toggle" checked />
+            <span>Radiological</span>
+          </label>
           <label class="mp-checkbox-label" title="Toggle orientation labels, depth readouts, and plane containers for publication view">
             <input type="checkbox" id="mp-labels-toggle" checked />
             <span>Labels</span>
@@ -90,7 +94,19 @@ export class MultiplanarViewer {
             <input type="checkbox" id="mp-crosshairs-toggle" checked />
             <span>Crosshairs</span>
           </label>
+          <div class="mp-zoom-group" title="Zoom in on crosshairs (or Shift + mouse wheel on slices)">
+            <span class="mp-zoom-icon">🔍</span>
+            <input type="range" class="mp-zoom-slider" id="mp-zoom-slider" min="1.0" max="6.0" step="0.1" value="1.0" />
+            <span class="mp-zoom-val" id="mp-zoom-val">1.0x</span>
+            <button id="mp-zoom-reset-btn" class="mp-action-btn mp-zoom-reset-btn" title="Reset Zoom to 1x">1x</button>
+          </div>
           <button id="mp-reset-btn" class="mp-action-btn" title="Reset all slices to default center">Reset Views</button>
+          <button id="mp-maximize-btn" class="mp-action-btn" title="Fill window / Maximize">
+            <svg id="mp-max-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+            </svg>
+            <span id="mp-max-text">Fill Window</span>
+          </button>
           <button id="mp-close-btn" class="mp-close-btn" title="Close Viewer">✕</button>
         </div>
       </div>
@@ -109,8 +125,8 @@ export class MultiplanarViewer {
               <canvas class="mp-crosshair-canvas" id="mp-crosshair-0"></canvas>
               <div class="mp-orient-label orient-top" id="mp-orient-0-top">A</div>
               <div class="mp-orient-label orient-bottom" id="mp-orient-0-bottom">P</div>
-              <div class="mp-orient-label orient-left" id="mp-orient-0-left">L</div>
-              <div class="mp-orient-label orient-right" id="mp-orient-0-right">R</div>
+              <div class="mp-orient-label orient-left" id="mp-orient-0-left">R</div>
+              <div class="mp-orient-label orient-right" id="mp-orient-0-right">L</div>
             </div>
             <div class="mp-pane-controls">
               <button class="mp-step-btn" id="mp-step-down-0" title="Step -1 mm">‹</button>
@@ -130,8 +146,8 @@ export class MultiplanarViewer {
               <canvas class="mp-crosshair-canvas" id="mp-crosshair-1"></canvas>
               <div class="mp-orient-label orient-top" id="mp-orient-1-top">S</div>
               <div class="mp-orient-label orient-bottom" id="mp-orient-1-bottom">I</div>
-              <div class="mp-orient-label orient-left" id="mp-orient-1-left">L</div>
-              <div class="mp-orient-label orient-right" id="mp-orient-1-right">R</div>
+              <div class="mp-orient-label orient-left" id="mp-orient-1-left">R</div>
+              <div class="mp-orient-label orient-right" id="mp-orient-1-right">L</div>
             </div>
             <div class="mp-pane-controls">
               <button class="mp-step-btn" id="mp-step-down-1" title="Step -1 mm">‹</button>
@@ -200,6 +216,8 @@ export class MultiplanarViewer {
     this.webglCanvas = this.modal.querySelector('#mp-webgl-canvas');
     this.closeBtn = this.modal.querySelector('#mp-close-btn');
     this.resetBtn = this.modal.querySelector('#mp-reset-btn');
+    this.maximizeBtn = this.modal.querySelector('#mp-maximize-btn');
+    this.radiologicalToggle = this.modal.querySelector('#mp-radiological-toggle');
     this.labelsToggle = this.modal.querySelector('#mp-labels-toggle');
     this.crosshairsToggle = this.modal.querySelector('#mp-crosshairs-toggle');
     this.copyMniBtn = this.modal.querySelector('#mp-copy-mni-btn');
@@ -209,7 +227,26 @@ export class MultiplanarViewer {
     this.inputZ = this.modal.querySelector('#mp-input-z');
     this.btnGoMni = this.modal.querySelector('#mp-btn-go-mni');
     this.voxelReadout = this.modal.querySelector('#mp-voxel-val');
+    this.zoom = 1.0;
+    this.zoomSlider = this.modal.querySelector('#mp-zoom-slider');
+    this.zoomVal = this.modal.querySelector('#mp-zoom-val');
+    this.zoomResetBtn = this.modal.querySelector('#mp-zoom-reset-btn');
     this.showLabels = true;
+    this.radiological = true;
+    this.isMaximized = false;
+    this._savedBounds = null;
+    this.atlasLabels = null;
+
+    // Load anatomical atlas labels for tissue, structure, substructure
+    fetch('data/atlas_labels.json')
+      .then(res => res.json())
+      .then(data => {
+        this.atlasLabels = data;
+        if (this.isOpen) {
+          this.updateVoxelReadout(this.currentWorldPoint || this.getCrosshairIntersectionPoint());
+        }
+      })
+      .catch(err => console.warn('Could not load atlas_labels.json:', err));
 
     this.panes = [];
     for (let i = 0; i < 3; i++) {
@@ -295,7 +332,72 @@ export class MultiplanarViewer {
       }
     });
 
-    // 3. Labels Toggle (Minimalistic Publication Mode)
+    // 3. Radiological Orientation Toggle
+    if (this.radiologicalToggle) {
+      this.radiologicalToggle.addEventListener('change', (e) => {
+        this.radiological = Boolean(e.target.checked);
+        this.update();
+      });
+    }
+
+    // 4. Maximize / Fill Window Button
+    if (this.maximizeBtn) {
+      const toggleMaximize = () => {
+        this.isMaximized = !this.isMaximized;
+        const maxText = this.modal.querySelector('#mp-max-text');
+        const maxIcon = this.modal.querySelector('#mp-max-icon');
+        if (this.isMaximized) {
+          this._savedBounds = {
+            left: this.modal.style.left,
+            top: this.modal.style.top,
+            width: this.modal.style.width,
+            height: this.modal.style.height,
+            transform: this.modal.style.transform
+          };
+          this.modal.style.left = '';
+          this.modal.style.top = '';
+          this.modal.style.width = '';
+          this.modal.style.height = '';
+          this.modal.style.transform = '';
+          this.modal.classList.add('mp-maximized');
+          if (maxText) maxText.textContent = 'Restore Size';
+          if (maxIcon) {
+            maxIcon.innerHTML = `
+              <rect x="5" y="9" width="14" height="12" rx="1"/>
+              <path d="M9 5h10a1 1 0 0 1 1 1v10"/>
+            `;
+          }
+          this.maximizeBtn.setAttribute('title', 'Restore to previous size');
+        } else {
+          this.modal.classList.remove('mp-maximized');
+          if (this._savedBounds) {
+            this.modal.style.left = this._savedBounds.left || '';
+            this.modal.style.top = this._savedBounds.top || '';
+            this.modal.style.width = this._savedBounds.width || '';
+            this.modal.style.height = this._savedBounds.height || '';
+            this.modal.style.transform = this._savedBounds.transform || '';
+          }
+          if (maxText) maxText.textContent = 'Fill Window';
+          if (maxIcon) {
+            maxIcon.innerHTML = `<rect x="3" y="3" width="18" height="18" rx="2"/>`;
+          }
+          this.maximizeBtn.setAttribute('title', 'Fill window / Maximize');
+        }
+        if (this.isOpen) {
+          this.updateCameraBounds();
+          this.render();
+          this.renderCrosshairs();
+        }
+      };
+
+      this.maximizeBtn.addEventListener('click', toggleMaximize);
+      this.header.addEventListener('dblclick', (e) => {
+        if (e.target.closest('.mp-header-actions') || e.target.closest('input') || e.target.closest('button')) return;
+        toggleMaximize();
+      });
+    }
+
+    // 5. Labels Toggle (Minimalistic Publication Mode)
     this.labelsToggle.addEventListener('change', (e) => {
       this.showLabels = Boolean(e.target.checked);
       if (this.showLabels) {
@@ -314,6 +416,19 @@ export class MultiplanarViewer {
       this.showCrosshairs = Boolean(e.target.checked);
       this.renderCrosshairs();
     });
+
+    // 4b. Zoom Slider & Reset Button (zooms in on crosshairs point)
+    if (this.zoomSlider) {
+      this.zoomSlider.addEventListener('input', (e) => {
+        this.setZoom(parseFloat(e.target.value));
+      });
+    }
+    if (this.zoomResetBtn) {
+      this.zoomResetBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.setZoom(1.0);
+      });
+    }
 
     // 5. Copy MNI Coordinates Button
     this.copyMniBtn.addEventListener('click', (e) => {
@@ -412,7 +527,7 @@ export class MultiplanarViewer {
     let initialLeft = 0, initialTop = 0;
 
     this.header.addEventListener('pointerdown', (e) => {
-      if (e.target.closest('.mp-header-actions')) return;
+      if (this.isMaximized || e.target.closest('.mp-header-actions')) return;
       isDraggingModal = true;
       dragStartX = e.clientX;
       dragStartY = e.clientY;
@@ -484,9 +599,14 @@ export class MultiplanarViewer {
         this.update();
       });
 
-      // Mouse wheel scrub
+      // Mouse wheel scrub (or zoom when Shift / Ctrl / Alt is held)
       pane.viewport.addEventListener('wheel', (e) => {
         e.preventDefault();
+        if (e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) {
+          const zoomDelta = e.deltaY < 0 ? 0.2 : -0.2;
+          this.setZoom(this.zoom + zoomDelta);
+          return;
+        }
         const delta = e.deltaY < 0 ? 1 : -1;
         const curInfo = this.clippingManager.getPlaneMNIInfo(plane);
         this.clippingManager.setPlaneMNICoord(plane, curInfo.coord + delta);
@@ -683,6 +803,20 @@ export class MultiplanarViewer {
     }
   }
 
+  /**
+   * Set zoom level for multiplanar slice views (zooming in on crosshairs point)
+   * @param {number} val - Zoom multiplier (1.0x to 6.0x)
+   */
+  setZoom(val) {
+    this.zoom = Math.max(1.0, Math.min(6.0, Math.round((parseFloat(val) || 1.0) * 10) / 10));
+    if (this.zoomSlider) this.zoomSlider.value = this.zoom.toFixed(1);
+    if (this.zoomVal) this.zoomVal.textContent = `${this.zoom.toFixed(1)}x`;
+    if (this.isOpen) {
+      this.updateCameraBounds();
+      this.update();
+    }
+  }
+
   updateCameraBounds() {
     for (let i = 0; i < 3; i++) {
       const pane = this.panes[i];
@@ -691,7 +825,7 @@ export class MultiplanarViewer {
       if (vpRect.width <= 0 || vpRect.height <= 0) continue;
 
       const aspect = vpRect.width / vpRect.height;
-      const baseHalfExtent = 115;
+      const baseHalfExtent = 115 / Math.max(0.1, this.zoom);
       const camera = this.cameras[i];
       if (!camera) continue;
 
@@ -763,6 +897,10 @@ export class MultiplanarViewer {
     this.clippingManager.planes[2].azimuth = 90;
     this.clippingManager.planes[2].elevation = 0;
     this.clippingManager.planes[2].depth = 0;
+
+    this.zoom = 1.0;
+    if (this.zoomSlider) this.zoomSlider.value = '1.0';
+    if (this.zoomVal) this.zoomVal.textContent = '1.0x';
 
     this.clippingManager.update();
     if (this.uiManager) {
@@ -947,11 +1085,21 @@ export class MultiplanarViewer {
       quad.quaternion.setFromUnitVectors(defaultNormal, n);
 
       // B. Setup face-on orthographic camera for this plane
-      // Plane 0 (Axial-like): camera looks along n0 (from +Z to -Z)
-      // Plane 1 (Coronal-like) & Plane 2 (Sagittal-like): camera looks along -n0
-      const viewDir = (i === 0) ? n0.clone() : n0.clone().negate();
+      // In Radiological orientation (default): Left is on Screen Right for both Axial (i=0) and Coronal (i=1)
+      // In Neurological orientation: Left is on Screen Left for both Axial (i=0) and Coronal (i=1)
+      let viewDir;
+      if (this.radiological) {
+        viewDir = n0.clone().negate();
+      } else {
+        viewDir = (i === 2) ? n0.clone().negate() : n0.clone();
+      }
 
-      camera.position.copy(cutPoint).addScaledVector(viewDir, -200);
+      // Camera target point: when zoomed, center directly on crosshairs intersection point!
+      const crossPoint = this.getCrosshairIntersectionPoint();
+      const zoomFactor = Math.min(1.0, Math.max(0.0, (this.zoom - 1.0) / 0.15));
+      const lookTarget = cutPoint.clone().lerp(crossPoint, zoomFactor);
+
+      camera.position.copy(lookTarget).addScaledVector(viewDir, -200);
 
       // Stable Up-Vector calculation for arbitrary oblique normal
       let up = new THREE.Vector3(0, 0, 1);
@@ -963,7 +1111,7 @@ export class MultiplanarViewer {
       up.sub(viewDir.clone().multiplyScalar(viewDir.dot(up))).normalize();
 
       camera.up.copy(up);
-      camera.lookAt(cutPoint);
+      camera.lookAt(lookTarget);
       camera.updateMatrixWorld();
       camera.updateProjectionMatrix();
 
@@ -1080,6 +1228,7 @@ export class MultiplanarViewer {
 
     const vm = this.volumeManager;
     let baseValStr = '—';
+    let labelName = '';
     let overlayValStr = '';
 
     // Sample base volume intensity
@@ -1091,9 +1240,33 @@ export class MultiplanarViewer {
         const iy = Math.min(ny - 1, Math.max(0, Math.floor(v.y * ny)));
         const iz = Math.min(nz - 1, Math.max(0, Math.floor(v.z * nz)));
         const idx = ix + iy * nx + iz * nx * ny;
-        const val = vm.texture.image.data[idx];
-        if (typeof val === 'number') {
-          baseValStr = (vm.rawMax > 1) ? `${Math.round(val)}` : val.toFixed(3);
+
+        let rawVal = 0;
+        if (vm.metadata && (vm.metadata.format === 'float16' || vm.metadata.format === 'halffloat')) {
+          const rawBits = vm.texture.image.data[idx];
+          const normVal = THREE.DataUtils.fromHalfFloat(rawBits);
+          rawVal = normVal * (vm.rawMax || 1.0);
+        } else {
+          const byteVal = vm.texture.image.data[idx];
+          if (vm.isAtlas && vm.rawMax > 0) {
+            rawVal = (byteVal > 0) ? (((byteVal - 1.0) / 254.0) * vm.rawMax) : 0.0;
+          } else {
+            rawVal = (vm.rawMax > 1) ? ((byteVal / 254.0) * vm.rawMax) : byteVal;
+          }
+        }
+
+        if (vm.isAtlas) {
+          const intLabel = Math.round(rawVal);
+          baseValStr = `${intLabel}`;
+          if (this.atlasLabels) {
+            const typeKey = vm.currentVolumeType; // 'tissue', 'structure', 'substructure'
+            const dict = this.atlasLabels[typeKey];
+            if (dict && dict[intLabel] !== undefined) {
+              labelName = dict[intLabel];
+            }
+          }
+        } else {
+          baseValStr = (vm.rawMax > 1) ? `${Math.round(rawVal)}` : rawVal.toFixed(3);
         }
       }
     }
@@ -1114,7 +1287,14 @@ export class MultiplanarViewer {
       }
     }
 
-    this.voxelReadout.textContent = `${baseValStr}${overlayValStr}`;
+    let readoutText = baseValStr;
+    if (labelName) {
+      readoutText += ` (${labelName})`;
+    }
+    if (overlayValStr) {
+      readoutText += overlayValStr;
+    }
+    this.voxelReadout.textContent = readoutText;
   }
 
   renderCrosshairs() {

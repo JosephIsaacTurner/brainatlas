@@ -1,3 +1,89 @@
+New Request: Complete? [x]
+[x] Once again, replace the arterial mesh with an even better one: /Users/jiturner/Repositories/Standard/UBA167/manually_refined_again_final.obj. 
+  - Updated `ARTERIAL_OBJ_PATH` to `/Users/jiturner/Repositories/Standard/UBA167/manually_refined_again_final.obj` in `build_cache.mjs`.
+  - Backed up raw mesh to `public/data/raw/arterial.obj`.
+  - Re-cached `arterial.bin.gz` (1.35 MB, 49,120 vertices, 98,268 triangles) and `arterial.json` in both `.cache/` and `public/data/`.
+  - Rebuilt static distribution via `npm run build` updating `dist/data/arterial.*`.
+
+New Request: Completed. [x]
+[x] The search bar is working well, but not quit so well for the subcortical meshes. It finds them, but if you click it doesn't bring you to the right menu and doesn't make it visible. It's working great for the skull/sub-bones.
+  - Fixed method name mismatch: Added `setAdditionalStructureEnabled` alias on `MeshManager` pointing to `toggleAdditionalBrainStructure`.
+  - Updated structure search action in `UIManager.buildSearchIndex`: switches directly to the `'meshes'` tab, calls `toggleAdditionalBrainStructure(struct.id, true)`, updates checkbox and widget summary, enables overall brain visibility (`setBrainVisible(true)`), expands `brainFolder`, and smoothly scrolls the GUI viewport directly to the Additional Structures widget.
+[x] Interestingly, when loading lead-DBS format tractograms, there are some interesting behaviors to possibly modify. 
+    [x] It seems to be automatically loading the leaddbs colorbar/effect size measures. I think this shouldn't be initial-- instead, when people select Gradient Metric dropdown, and then from there the "Streamline Values / Effect Size" option, then it should have a file explorer that lets you then manually select the leaddbs colorbar svg file, if that makes sense. It should already know the home directory corresponding to the tractogram file, and pre-populate the file explorer to that directory, but it should not automatically load the colorbar as soon as you drag/drop the tractogram. 
+      - Removed automatic forcing of `colormap = 'leaddbs'` and `colormapMetric = 'vals'` upon loading `.mat` files in `TractographyManager.loadLeadDBSFromFile`. Dropped Lead-DBS tractograms now respect the user's current colormap and directional settings (defaulting to standard RGB / Principal Direction).
+      - Added file picker trigger when switching the Gradient Metric dropdown to "Streamline Values / Effect Size" (`vals`), prompting for the colorbar `.svg` file if not already loaded.
+      - Retains directory handles using `window.showOpenFilePicker` with fallback to native file input, pre-populating the file explorer to the directory corresponding to the tractogram.
+      - Added dedicated `🎨 Load Colorbar (.svg)...` button in the Tractography settings panel and enabled dragging and dropping `.svg` colorbar files directly onto the viewer (either alone or alongside the `.mat` tractogram).
+    [x] It doesn't appear to be able to colormap by any metric BESIDES the leaddbs colorbar. We want it to be able to use other gradient metrics including the directional ones, not rely on a lead-dbs colorbar or even require one. 
+      - Decoupled metric computation in `TractographyManager.computeColorsForTract`: fixed line 842 condition from `(this.colormapMetric === 'vals' || tract.isLeadDBS)` to `(this.colormapMetric === 'vals' && tract.hasScalars && tract.scalars)`.
+      - Lead-DBS tractograms can now seamlessly use all gradient metrics (Principal Direction LR→AP→IS, Inferior-Superior Z, Anterior-Posterior Y, Left-Right X, Elevation Angle, Streamline Length) as well as all colormaps (Directional RGB, Rocket, Turbo, Viridis, Plasma, Inferno, Magma, Cividis, Cool-Warm, Rainbow, Hot, Cool, etc.).
+      - When `leaddbs` colormap is selected, it evaluates custom LUTs extracted from SVG colorbars, falls back to `fibcolor` endpoints if present, and gracefully defaults to perceptually uniform `rocket`.
+    [x] For some tractograms, it takes MINUTES to load and the window is frozen for this time. I understand if the io takes a long time, there might not be much we can do about it. But it would be nice to have a loading spinner or some sort of progress bar to let people know that the file is being processed. Most people will think the app is frozen and just close it. the browser even says "Page has stopped responding. Quit or Wait?" several times (you have to click wait) before some of these bigger ones are loaded. 
+      - Added `#progress-modal` with progress card, spinner, progress bar track/fill, live percentage readout, and status messaging in `index.html` and `src/style.css` (with dark and light mode overrides).
+      - Implemented `showProgressModal`, `updateProgressModal`, and `hideProgressModal` in `UIManager`.
+      - Introduced cooperative event-loop yielding (`await new Promise(r => setTimeout(r, 0))`) every 50–200 streamlines during parsing, WASM extraction, and 3D geometry construction, preventing UI freezing and completely eliminating the "Page has stopped responding. Quit or Wait?" browser warning.
+    [x] There are some lead-dbs tractograms that aren't loading at all and intermittently gives errors like Error loading dropped file: MAT file is missing "fibcell" dataset (not a valid Lead-DBS tractogram). (some filepaths you can test on:'/Users/jiturner/Documents/MATLAB/leaddbs/templates/space/MNI152NLin2009bAsym/atlases/DBS Tractography Atlas (Middlebrooks 2020)/rh/Fasciculus_Lenticularis.mat', '/Users/jiturner/Documents/MATLAB/leaddbs/templates/space/MNI152NLin2009bAsym/atlases/DBS Tractography Atlas (Middlebrooks 2020)/rh/STN_limbic_tract.mat', '/Users/jiturner/Documents/MATLAB/leaddbs/templates/space/MNI152NLin2009bAsym/atlases/Hyperdirect Pathway Atlas (Treu 2020)/midline/Hyperdirect_Pathway.mat'
+      - Diagnosed that Lead-DBS atlases utilize four distinct formats: Level 5 MAT (`MATLAB 5.0`) with `fibers`/`idx`, Level 5 MAT with `fibcell`, v7.3 HDF5 (`MATLAB 7.3`) with `fibers`/`idx`, and v7.3 HDF5 with `fibcell`.
+      - Built a pure JavaScript Level 5 MAT binary parser in `src/leadDBSLoader.js` using `pako.inflate` to parse `miCOMPRESSED` tags, `miMATRIX` structures, column-major numeric arrays, and nested cell arrays. Parses `Fasciculus_Lenticularis.mat` in 2.3ms, `STN_limbic_tract.mat` in 23.7ms, and `Hyperdirect_Pathway.mat` in 0.4ms.
+      - Upgraded the v7.3 HDF5 parser in `src/leadDBSLoader.js` to support both `fibcell` nested references and `fibers`/`idx` contiguous datasets (e.g. `Brainstem Connectome CST.mat` with 1.6M points in 211ms).
+      - Added `parseSvgColorbar(svgText)` supporting continuous raster gradient strips embedded as base64 PNGs and SVG `<linearGradient>` stops.
+
+
+New Request: Completed. [x]
+[x] Bugfix: For tractography, when I drag/drop a new tract (.trk.gz), it duplicates the tracts dropdown multiselect menu of the available tract toggle/swatches. There become two copies in a row.
+  - Resolved Lil-GUI DOM leak by explicitly querying and removing `.custom-multiselect-controller` and destroying child controllers before recreating.
+  - Implemented `UIManager.refreshTractMultiselect()` to refresh the existing tract checklist DOM, badges, and button labels in-place without rebuilding the folder.
+  - Updated drag-and-drop and file upload handlers to invoke `refreshTractMultiselect()` instead of re-running `setupTractographyControls`.
+[x] Bugfix: The "fill window" function on the multiplanar viewer is only really filling ~60% of the window, anchored on the top right.
+  - Diagnosed interaction with global `html { zoom: 0.75 }`: CSS `100vw`/`100vh` under 75% zoom resulted in a 75%x75% scaled box (~56% area).
+  - Replaced viewport units with `width: 100% !important; height: 100% !important; inset: 0 !important; max-width: none !important; max-height: none !important;`.
+  - Cleared inline drag dimensions (`width`, `height`, `left`, `top`) on maximize and reliably restored them upon un-maximize.
+[x] New feature: Add zoom option within the multiplanar viewer that zooms in on the crosshairs point.
+  - Added `this.zoom = 1.0` state (range `1.0x` to `6.0x`) and `setZoom(val)` method in `src/multiplanarViewer.js`.
+  - Camera frustum half-extents scale dynamically (`baseHalfExtent = 115 / this.zoom`), while camera focus points lerp towards `this.getCrosshairIntersectionPoint()`.
+  - Added zoom slider, numeric readout, and reset button to modal header, plus modifier-key wheel zooming (Shift, Ctrl, Alt, Meta + wheel) inside viewports.
+[x] Set "interpolate volume" to FALSE by default (the base volume)
+  - Configured `this.interpolate = false;` in `src/volumeManager.js`, defaulting texture filtering to `THREE.NearestFilter`.
+[x] For tractography, when you drag/drop a new tract in, it should auto-enable tract visibility even if "tracts" were disabled before import.
+  - Added `this.setVisible(true)` in `loadTRKFromFile` and `loadLeadDBSFromFile` in `src/tractographyManager.js`.
+  - Added `this.setTractsVisible(true)` on drag-and-drop and file input upload in `src/ui.js`, synchronizing the toolbar toggle and status indicator dot.
+[x] New feature: For nifti overlays, there should be a button called "Create 3d mesh" with a threshold modal.
+  - Created `src/marchingCubes.js` providing isocontour polygonization with CCW outward normals and direct MNI coordinate mapping via volume affine matrix.
+  - Added "✨ Create 3D Mesh..." button in overlay folders under `setupOverlayControls` in `src/ui.js`.
+  - Implemented `openCreateMeshModal(ov)` with threshold range slider, numeric input, mesh name, color picker, and Cancel/Create buttons.
+  - Generated meshes are registered in-memory via `meshManager._registerCustomMesh`, added to scene, and exposed in the Custom Meshes GUI.
+[x] New feature: Be able to drag/drop .mat files corresponding to lead-DBS tractogram and view them as tracts.
+  - Created `src/leadDBSLoader.js` leveraging `h5wasm` to parse MATLAB v7.3 HDF5 tractograms directly in-browser.
+  - Dereferences 2-level nested `fibcell` cell arrays into 3D streamlines, parses per-streamline scalars (`vals`), and parses colormap endpoints (`fibcolor`).
+  - Added `loadLeadDBSFromFile` in `src/tractographyManager.js`, integrated `Lead-DBS Colorbar` (`leaddbs`) and `Streamline Values / Effect Size` (`vals`) colormap options, and wired `.mat` drag-and-drop and file chooser.
+[x] New feature: Top-right menu should also have a little magnifying lense icon somewhere in the top right that when clicked, opens a modal window with a search bar.
+  - Added `#btn-search-structures` magnifying glass button to `.sidebar-tabs` in the top right of the right sidebar.
+  - Implemented `openStructureSearchModal()` and `buildSearchIndex()` indexing all brain surface models, 12 subcortical brain structures, monolithic skull, 22 Ohio skull sub-bones, soft tissue, vasculature, ventricles, dural folds, 32+ tract bundles, base MRI volumes, and active statistical overlays.
+  - Integrated real-time multi-term search, keyboard navigation (`↑`/`↓`, `Enter`, `Esc`), and shortcut triggers (`/` and `⌘K`/`Ctrl+K`).
+  - Selecting an item switches to the appropriate tab, opens the folder, and activates the structure.
+
+New Request: Completed. [x]
+[x] For multiplanar viewer, there should be a toggle button for "Radiological Orientation" to put L on screen Right (this should be default BTW). Actually we need to make sure that the anatomical L/R to screen L/R is consistent within the three panels - currently it's inconsistent.
+  - Added `#mp-radiological-toggle` checkbox in the Multiplanar Slice Viewer header, enabled (checked) by default.
+  - Resolved previous orientation inconsistency: Axial and Coronal views now both place Patient Left on Screen Right (and Patient Right on Screen Left) under Radiological orientation.
+  - When unchecked (Neurological orientation), both Axial and Coronal views place Patient Left on Screen Left and Patient Right on Screen Right.
+  - Slices, cameras, crosshairs, raycasting, and dynamic viewport orientation labels (A/P, S/I, L/R) synchronize seamlessly in both modes.
+[x] Solid color picking options on tractography seems like some redundant/ambiguous controls. For the dropdown multiselect for the provided tracts, there's a color swatch selector. But then below that we also have a "Solid Color" picker and its not clear if it controls the color of the default tract(s) and if so which one(s).
+  - Streamlined Tractography Color Mode into `'Colormap / Directional'` vs `'Tract Colors'`.
+  - Removed redundant/confusing global "Solid Color" picker controller from the Lil-GUI panel; each tract's solid color is directly and clearly managed via its individual swatch popover in the tract multiselect checklist.
+[x] In multiplanar viewer, can we display the anatomical label of the voxel the crosshairs is selecting, just next to where we are showing that voxel's intensity at the bottom? There are only three default atlases with labels currently, the tissue/structure/substructure atlas. There's an excel spreadsheet that encodes the labels that map onto voxel intensity values: /Users/jiturner/Repositories/Standard/manjon_atlas/HoliBrain_Protocol_v1.0.xlsx
+  - Extracted 10 tissue classes, 54 structure labels, and 352 substructure labels from `HoliBrain_Protocol_v1.0.xlsx` into `public/data/atlas_labels.json`.
+  - Re-cached `volume_substructure` as `float16` to preserve all 352 discrete integer labels without loss or uint8 quantization collisions.
+  - Updated `updateVoxelReadout(worldPoint)` in `src/multiplanarViewer.js` to decode voxel values and display the anatomical structure name next to the voxel intensity (e.g. `Voxel: 14 (Left Thalamus)` or `Voxel: 4 (Deep GM)`) in real-time on hover, scrubbing, and click.
+[x] Multiplanar viewer full window option that expands the modal to fill the whole window, and a button to restore to previous size.
+  - Added `#mp-maximize-btn` ("Fill Window" / "Restore Size") in the modal header with responsive icon, and enabled double-clicking the header to toggle maximize.
+  - Added `.multiplanar-modal.mp-maximized` styles with fixed viewport bounds (`100vw` x `100vh`), seamlessly adapting to global 75% CSS zoom.
+  - Remembers and restores previous window bounds (position, width, height) when un-maximized.
+[x] Is the base volume always being resampled/interpolated? By default we should interpolate, but there should be an option NOT to interpolate just as we do for NIfTI overlays.
+  - Added `interpolate: true` state and `setInterpolate(enabled)` method on `VolumeManager`, dynamically switching textures between `THREE.LinearFilter` and `THREE.NearestFilter`.
+  - Added `Interpolate Volume` toggle in the Base Volume Lil-GUI folder, instantly toggling interpolation across 3D slice planes and multiplanar views. 
+
 New Request: Completed. [x]
 [x] For tracts, make default to NOT clip them.
   - Set `this.clipTracts = false` by default in `src/tractographyManager.js`.

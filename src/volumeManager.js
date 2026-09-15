@@ -103,6 +103,7 @@ export class VolumeManager {
     this.rawMax = 351.04;
     this.defaultRawWindow = [100, 300];
     this.isAtlas = false;
+    this.interpolate = false;
     this.isLoaded = false;
     this.cachedVolumes = {};
     this.cachedMetadata = {};
@@ -363,8 +364,9 @@ export class VolumeManager {
       const texture = new THREE.Data3DTexture(dataArray, width, height, depth);
       texture.format = THREE.RedFormat;
       texture.type = textureType;
-      texture.minFilter = THREE.LinearFilter;
-      texture.magFilter = THREE.LinearFilter;
+      const filter = this.interpolate ? THREE.LinearFilter : THREE.NearestFilter;
+      texture.minFilter = filter;
+      texture.magFilter = filter;
       texture.wrapS = THREE.ClampToEdgeWrapping;
       texture.wrapT = THREE.ClampToEdgeWrapping;
       texture.wrapR = THREE.ClampToEdgeWrapping;
@@ -542,8 +544,9 @@ export class VolumeManager {
       const texture = new THREE.Data3DTexture(uint8Data, dims[0], dims[1], dims[2]);
       texture.format = THREE.RedFormat;
       texture.type = THREE.UnsignedByteType;
-      texture.minFilter = THREE.LinearFilter;
-      texture.magFilter = THREE.LinearFilter;
+      const filter = this.interpolate ? THREE.LinearFilter : THREE.NearestFilter;
+      texture.minFilter = filter;
+      texture.magFilter = filter;
       texture.wrapS = THREE.ClampToEdgeWrapping;
       texture.wrapT = THREE.ClampToEdgeWrapping;
       texture.wrapR = THREE.ClampToEdgeWrapping;
@@ -614,6 +617,25 @@ export class VolumeManager {
     for (const cb of this.onBaseVolumeChangeCallbacks) {
       cb(this);
     }
+  }
+
+  setInterpolate(enabled) {
+    this.interpolate = Boolean(enabled);
+    const filter = this.interpolate ? THREE.LinearFilter : THREE.NearestFilter;
+    if (this.texture) {
+      this.texture.minFilter = filter;
+      this.texture.magFilter = filter;
+      this.texture.needsUpdate = true;
+    }
+    for (const key of Object.keys(this.cachedVolumes)) {
+      const tex = this.cachedVolumes[key];
+      if (tex) {
+        tex.minFilter = filter;
+        tex.magFilter = filter;
+        tex.needsUpdate = true;
+      }
+    }
+    this.notifyBaseVolumeChange();
   }
 
   async loadOverlayFromBuffer(rawBuffer, name = 'overlay.nii.gz', onProgress = null) {
@@ -793,6 +815,7 @@ export class VolumeManager {
         enabled: true,
         projectOntoMesh: true,
         dims,
+        affine: affine.clone(),
         rawMin: rawMin !== Infinity ? rawMin : 0,
         rawMax: rawMax !== -Infinity ? rawMax : 1,
         rawOverlayData: float32Overlay,

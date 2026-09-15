@@ -60,7 +60,7 @@
   "rawMax": 352.0,
   "defaultWindow": null,
   "isAtlas": true,
-  "format": "uint8",
-  "byteLength": 56873096,
-  "compressedLength": 1290244
+  "format": "float16",
+  "byteLength": 113746192,
+  "compressedLength": 1555685
 }

@@ -364,6 +364,10 @@ export class TractographyManager {
     this.clipTracts = false; // Default: do not clip tracts
     this.subsample = 10; // Default 10% tract density (every 10th streamline)
 
+    // Custom SVG colorbar table ([r,g,b] in [0, 1])
+    this.customColormapTable = null;
+    this.customColorbarName = null;
+
     // Legacy compatibility fields
     this.fileName = '';
 
@@ -382,11 +386,20 @@ export class TractographyManager {
   }
 
   onLoaded(cb) {
-    if (typeof cb === 'function') this.onLoadedCallbacks.push(cb);
+    if (typeof cb === 'function' && !this.onLoadedCallbacks.includes(cb)) {
+      this.onLoadedCallbacks.push(cb);
+    }
   }
 
   onUpdate(cb) {
-    if (typeof cb === 'function') this.onUpdateCallbacks.push(cb);
+    if (typeof cb === 'function' && !this.onUpdateCallbacks.includes(cb)) {
+      this.onUpdateCallbacks.push(cb);
+    }
+  }
+
+  offUpdate(cb) {
+    const idx = this.onUpdateCallbacks.indexOf(cb);
+    if (idx !== -1) this.onUpdateCallbacks.splice(idx, 1);
   }
 
   notifyLoaded() {
@@ -680,14 +693,93 @@ export class TractographyManager {
 
     this.fileName = file.name;
     this.customTracts.push(customTract);
+    this.setVisible(true);
+    if (onProgress) onProgress({ progress: 0.85, message: 'Generating 3D tract geometry...' });
     this.buildTractGeometry(customTract);
     if (customTract.lineMesh) {
       customTract.lineMesh.visible = this.visible;
       this.scene.add(customTract.lineMesh);
     }
 
+    if (onProgress) onProgress({ progress: 1.0, message: 'Tractogram loaded successfully!' });
     this.notifyLoaded();
     return customTract;
+  }
+
+  /**
+   * Load custom Lead-DBS .mat tractogram from user file
+   */
+  async loadLeadDBSFromFile(file, onProgress = null) {
+    if (onProgress) onProgress({ progress: 0.1, message: `Reading ${file.name}...` });
+    const buffer = await file.arrayBuffer();
+
+    const { parseLeadDBSMat } = await import('./leadDBSLoader.js');
+    const res = await parseLeadDBSMat(buffer, onProgress);
+
+    const customId = `lead_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    const customTract = {
+      id: customId,
+      name: file.name,
+      shortName: file.name.replace(/\.mat$/gi, ''),
+      category: 'custom',
+      categoryName: 'Custom Uploaded Tracts',
+      path: null,
+      enabled: true,
+      loading: false,
+      loaded: true,
+      isLeadDBS: true,
+      rawStreamlines: res.streamlines,
+      totalStreamlines: res.streamlines.length,
+      totalPoints: res.totalPts,
+      scalars: res.scalars,
+      hasScalars: res.hasScalars,
+      minScalar: res.minScalar,
+      maxScalar: res.maxScalar,
+      fibcolor: res.fibcolor,
+      lineMesh: null,
+      geometry: null,
+      material: null,
+      cachedPositions: null,
+      streamlineStats: null,
+      maxStreamlineLen: 1.0,
+      colorHex: '#38bdf8'
+    };
+
+    this.fileName = file.name;
+    this.customTracts.push(customTract);
+    this.setVisible(true);
+
+    if (onProgress) onProgress({ progress: 0.9, message: 'Generating 3D tract geometry...' });
+    this.buildTractGeometry(customTract);
+    if (customTract.lineMesh) {
+      customTract.lineMesh.visible = this.visible;
+      this.scene.add(customTract.lineMesh);
+    }
+
+    if (onProgress) onProgress({ progress: 1.0, message: 'Tractogram loaded successfully!' });
+    this.notifyLoaded();
+    return customTract;
+  }
+
+  /**
+   * Load and apply a custom Lead-DBS Colorbar (.svg)
+   */
+  async loadColorbarSVGFromFile(file) {
+    const text = await file.text();
+    const { parseSvgColorbar } = await import('./leadDBSLoader.js');
+    const lut = await parseSvgColorbar(text);
+    if (!lut || lut.length === 0) {
+      throw new Error('Could not extract colorbar palette from SVG file.');
+    }
+    this.customColormapTable = lut;
+    this.customColorbarName = file.name;
+    for (const tract of this.customTracts) {
+      tract.customColormapTable = lut;
+    }
+    this.colormap = 'leaddbs';
+    this.updateAllTractColors();
+    this.notifyUpdate();
+    return lut;
   }
 
   /**
@@ -772,7 +864,12 @@ export class TractographyManager {
       } else {
         let metricVal = 0.0;
 
-        if (this.colormapMetric === 'principal') {
+        if (this.colormapMetric === 'vals' && tract.hasScalars && tract.scalars) {
+          const origIdx = (stat.origIdx !== undefined) ? stat.origIdx : i;
+          const sVal = tract.scalars[origIdx];
+          const sRange = Math.max(1e-6, tract.maxScalar - tract.minScalar);
+          metricVal = Math.max(0.0, Math.min(1.0, (sVal - tract.minScalar) / sRange));
+        } else if (this.colormapMetric === 'principal') {
           // Principal Fiber Orientation differentiation calculated from direction vector:
           // dx = |x0 - x1|, dy = |y0 - y1|, dz = |z0 - z1|
           // (vx, vy, vz) represents unit directional vector in [0, 1] octant (LR, AP, IS)
@@ -806,7 +903,34 @@ export class TractographyManager {
 
         // Contrast stretching / windowing
         const t = Math.max(0.0, Math.min(1.0, (metricVal - cMin) / cRange));
-        const [cr, cg, cb] = evaluateColormap(this.colormap, t);
+        let cr = 1.0, cg = 1.0, cb = 1.0;
+
+        if (this.colormap === 'leaddbs') {
+          const customLut = tract.customColormapTable || this.customColormapTable;
+          if (customLut && customLut.length > 0) {
+            const lutIdx = Math.max(0, Math.min(customLut.length - 1, Math.round(t * (customLut.length - 1))));
+            const c = customLut[lutIdx];
+            cr = c[0];
+            cg = c[1];
+            cb = c[2];
+          } else if (tract.fibcolor) {
+            const c0 = tract.fibcolor.color0;
+            const c1 = tract.fibcolor.color1;
+            cr = c0[0] * (1.0 - t) + c1[0] * t;
+            cg = c0[1] * (1.0 - t) + c1[1] * t;
+            cb = c0[2] * (1.0 - t) + c1[2] * t;
+          } else {
+            const evalColor = evaluateColormap('rocket', t);
+            cr = evalColor[0];
+            cg = evalColor[1];
+            cb = evalColor[2];
+          }
+        } else {
+          const evalColor = evaluateColormap(this.colormap, t);
+          cr = evalColor[0];
+          cg = evalColor[1];
+          cb = evalColor[2];
+        }
 
         // Bundle dithering
         const factor = (1.0 - this.dither) + this.dither * pseudoRandom(i);
@@ -887,7 +1011,7 @@ export class TractographyManager {
       const len = Math.sqrt(dx * dx + dy * dy + dz * dz);
       if (len > maxLen) maxLen = len;
 
-      tract.streamlineStats.push({ len, dx, dy, dz, segCount });
+      tract.streamlineStats.push({ len, dx, dy, dz, segCount, origIdx: i });
     }
 
     tract.maxStreamlineLen = maxLen;
