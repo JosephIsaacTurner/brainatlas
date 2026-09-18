@@ -1,10 +1,24 @@
+New Request: Complete? [x] 
+[x] Bugfix: Multiplanar view when zoomed in, the moving the crosshairs around the slice planes isn't relocating to the actual location of the cursor anatomically-- it looks like its locating to the point that the cursor would be on WITHOUT the zoom. So if you start moving the crosshairs around while zoomed in, it goes crazy. Moreover, can we make the zoom applied to each of the three multiplanar viewports independently, so that you can zoom in on one plane and not the others, and have different zoom levels for each of the three planes.
+  - Resolved positive feedback loop during crosshair navigation: replaced continuous camera `lookTarget` lerping to `crossPoint` with plane-anchored `cutPoint` and `panOffsets[i]`. Slices now remain stable under cursor interaction while moving crosshairs, raycasting stably and linearly from screen cursor to anatomical voxels without jumping or erratic acceleration.
+  - Implemented independent per-plane zoom: converted `this.zoom` scalar to `this.zooms = [1.0, 1.0, 1.0]` and `this.panOffsets = [new THREE.Vector2(), new THREE.Vector2(), new THREE.Vector2()]`.
+  - Added dedicated per-pane zoom control badges (`[−] 1.0x [+] [⌖]`) to `.mp-pane-header` for Axial, Coronal, and Sagittal viewports, allowing independent zooming, click-to-reset, and centering on crosshairs.
+  - Shift / Ctrl / Alt / Meta + mouse wheel on any slice plane now independently zooms that specific viewport.
+  - Added right-click / middle-click drag to pan zoomed viewports, and double-clicking any slice re-centers view on crosshairs.
+  - Updated camera frustum calculation (`baseHalfExtent = 115 / this.zooms[i]`) and retained master slider in modal header for uniform zoom adjustments.
+[x] Left-hand menu "Show Imaging Slice" toggle button not disabling the imaging slice, although the top "Show Imaging Slice" toggle works well.
+  - Added `setSliceVisible(visible)` method to `ClippingManager` to update `this.sliceVisible` and trigger `this.update()`.
+  - Fixed Lil-GUI mutation race in `UIManager.setSliceVisible`: Lil-GUI mutates the bound property prior to `onChange`, causing the previous `sliceVisible !== visible` check to evaluate false. Removed conditional guard, ensuring `this.clippingManager.setSliceVisible(visible)` is always invoked and controller displays are refreshed.
+[x] Change dural fold mesh default style to Velvet (not bone)
+  - Updated default render style in `src/meshManager.js`: initialized `this.duralFoldsStyle = 'velvet'`, configuring the initial shader material to velvet upon startup and setting the Lil-GUI dropdown default to Velvet.
+
 New Request: Complete? [x]
 [x] Once again, replace the arterial mesh with an even better one: /Users/jiturner/Repositories/Standard/UBA167/manually_refined_again_final.obj. 
   - Updated `ARTERIAL_OBJ_PATH` to `/Users/jiturner/Repositories/Standard/UBA167/manually_refined_again_final.obj` in `build_cache.mjs`.
   - Backed up raw mesh to `public/data/raw/arterial.obj`.
   - Re-cached `arterial.bin.gz` (1.35 MB, 49,120 vertices, 98,268 triangles) and `arterial.json` in both `.cache/` and `public/data/`.
   - Rebuilt static distribution via `npm run build` updating `dist/data/arterial.*`.
-
+c
 New Request: Completed. [x]
 [x] The search bar is working well, but not quit so well for the subcortical meshes. It finds them, but if you click it doesn't bring you to the right menu and doesn't make it visible. It's working great for the skull/sub-bones.
   - Fixed method name mismatch: Added `setAdditionalStructureEnabled` alias on `MeshManager` pointing to `toggleAdditionalBrainStructure`.

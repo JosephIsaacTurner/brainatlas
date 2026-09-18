@@ -1261,6 +1261,91 @@ body.theme-white .mp-zoom-reset-btn {
   color: var(--text-muted);
 }
 
+.mp-pane-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mp-pane-zoom-ctrl {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  padding: 1px 3px;
+  user-select: none;
+}
+
+.mp-pane-zoom-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.12s ease;
+}
+
+.mp-pane-zoom-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #f1f5f9;
+}
+
+.mp-pane-zoom-val {
+  font-size: 10px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-weight: 600;
+  color: #94a3b8;
+  padding: 0 3px;
+  cursor: pointer;
+  min-width: 24px;
+  text-align: center;
+  transition: color 0.12s ease;
+}
+
+.mp-pane-zoom-val:hover {
+  color: #38bdf8;
+  text-decoration: underline;
+}
+
+.mp-pane-zoom-val.active {
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+.mp-pane-center-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 11px;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.12s ease;
+  margin-left: 1px;
+}
+
+.mp-pane-center-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #38bdf8;
+}
+
 .mp-pane-viewport {
   flex: 1;
   position: relative;
@@ -1595,6 +1680,38 @@ body.theme-white .multiplanar-modal:not(.mp-minimal) .mp-pane-badge,
 body.theme-white .multiplanar-modal:not(.mp-minimal) .mp-pane-coords,
 .multiplanar-modal.theme-white:not(.mp-minimal) .mp-pane-coords {
   color: #475569;
+}
+
+body.theme-white .mp-pane-zoom-ctrl {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+body.theme-white .mp-pane-zoom-btn {
+  color: #64748b;
+}
+
+body.theme-white .mp-pane-zoom-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #0f172a;
+}
+
+body.theme-white .mp-pane-zoom-val {
+  color: #64748b;
+}
+
+body.theme-white .mp-pane-zoom-val:hover,
+body.theme-white .mp-pane-zoom-val.active {
+  color: #0284c7;
+}
+
+body.theme-white .mp-pane-center-btn {
+  color: #94a3b8;
+}
+
+body.theme-white .mp-pane-center-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #0284c7;
 }
 
 body.theme-white .multiplanar-modal:not(.mp-minimal) .mp-orient-label,

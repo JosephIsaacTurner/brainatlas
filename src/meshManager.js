@@ -227,7 +227,7 @@ export class MeshManager {
     this.duralFoldsVisible = false; // Default: not visible
     this.duralFoldsOpacity = 0.95;
     this.duralFoldsColor = 0xa78bfa; // Default: distinct lavender/purple
-    this.duralFoldsStyle = 'bone'; // Default: bone render style
+    this.duralFoldsStyle = 'velvet'; // Default: velvet render style
     this.duralFoldsClipped = false; // Default: NOT clipped
 
     // 8. Custom Drag & Drop OBJ Meshes

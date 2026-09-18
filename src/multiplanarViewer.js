@@ -94,11 +94,11 @@ export class MultiplanarViewer {
             <input type="checkbox" id="mp-crosshairs-toggle" checked />
             <span>Crosshairs</span>
           </label>
-          <div class="mp-zoom-group" title="Zoom in on crosshairs (or Shift + mouse wheel on slices)">
+          <div class="mp-zoom-group" title="Master zoom for all planes (or Shift + mouse wheel on individual slices)">
             <span class="mp-zoom-icon">🔍</span>
             <input type="range" class="mp-zoom-slider" id="mp-zoom-slider" min="1.0" max="6.0" step="0.1" value="1.0" />
             <span class="mp-zoom-val" id="mp-zoom-val">1.0x</span>
-            <button id="mp-zoom-reset-btn" class="mp-action-btn mp-zoom-reset-btn" title="Reset Zoom to 1x">1x</button>
+            <button id="mp-zoom-reset-btn" class="mp-action-btn mp-zoom-reset-btn" title="Reset all planes zoom to 1x">1x</button>
           </div>
           <button id="mp-reset-btn" class="mp-action-btn" title="Reset all slices to default center">Reset Views</button>
           <button id="mp-maximize-btn" class="mp-action-btn" title="Fill window / Maximize">
@@ -119,7 +119,15 @@ export class MultiplanarViewer {
           <div class="mp-pane" id="mp-pane-0" data-plane="0">
             <div class="mp-pane-header">
               <span class="mp-pane-badge badge-plane1" id="mp-badge-0">Plane 1 (Axial)</span>
-              <span class="mp-pane-coords" id="mp-pane-coords-0">Depth: 0 mm</span>
+              <div class="mp-pane-header-right">
+                <div class="mp-pane-zoom-ctrl" title="Plane zoom (or Shift + mouse wheel on slice)">
+                  <button class="mp-pane-zoom-btn" id="mp-zoom-out-0" title="Zoom Out">−</button>
+                  <span class="mp-pane-zoom-val" id="mp-pane-zoom-val-0" title="Click to reset zoom to 1x">1.0x</span>
+                  <button class="mp-pane-zoom-btn" id="mp-zoom-in-0" title="Zoom In">+</button>
+                  <button class="mp-pane-center-btn" id="mp-center-btn-0" title="Center view on crosshairs">⌖</button>
+                </div>
+                <span class="mp-pane-coords" id="mp-pane-coords-0">Depth: 0 mm</span>
+              </div>
             </div>
             <div class="mp-pane-viewport" id="mp-viewport-0">
               <canvas class="mp-crosshair-canvas" id="mp-crosshair-0"></canvas>
@@ -140,7 +148,15 @@ export class MultiplanarViewer {
           <div class="mp-pane" id="mp-pane-1" data-plane="1">
             <div class="mp-pane-header">
               <span class="mp-pane-badge badge-plane2" id="mp-badge-1">Plane 2 (Coronal)</span>
-              <span class="mp-pane-coords" id="mp-pane-coords-1">Depth: 0 mm</span>
+              <div class="mp-pane-header-right">
+                <div class="mp-pane-zoom-ctrl" title="Plane zoom (or Shift + mouse wheel on slice)">
+                  <button class="mp-pane-zoom-btn" id="mp-zoom-out-1" title="Zoom Out">−</button>
+                  <span class="mp-pane-zoom-val" id="mp-pane-zoom-val-1" title="Click to reset zoom to 1x">1.0x</span>
+                  <button class="mp-pane-zoom-btn" id="mp-zoom-in-1" title="Zoom In">+</button>
+                  <button class="mp-pane-center-btn" id="mp-center-btn-1" title="Center view on crosshairs">⌖</button>
+                </div>
+                <span class="mp-pane-coords" id="mp-pane-coords-1">Depth: 0 mm</span>
+              </div>
             </div>
             <div class="mp-pane-viewport" id="mp-viewport-1">
               <canvas class="mp-crosshair-canvas" id="mp-crosshair-1"></canvas>
@@ -161,7 +177,15 @@ export class MultiplanarViewer {
           <div class="mp-pane" id="mp-pane-2" data-plane="2">
             <div class="mp-pane-header">
               <span class="mp-pane-badge badge-plane3" id="mp-badge-2">Plane 3 (Sagittal)</span>
-              <span class="mp-pane-coords" id="mp-pane-coords-2">Depth: 0 mm</span>
+              <div class="mp-pane-header-right">
+                <div class="mp-pane-zoom-ctrl" title="Plane zoom (or Shift + mouse wheel on slice)">
+                  <button class="mp-pane-zoom-btn" id="mp-zoom-out-2" title="Zoom Out">−</button>
+                  <span class="mp-pane-zoom-val" id="mp-pane-zoom-val-2" title="Click to reset zoom to 1x">1.0x</span>
+                  <button class="mp-pane-zoom-btn" id="mp-zoom-in-2" title="Zoom In">+</button>
+                  <button class="mp-pane-center-btn" id="mp-center-btn-2" title="Center view on crosshairs">⌖</button>
+                </div>
+                <span class="mp-pane-coords" id="mp-pane-coords-2">Depth: 0 mm</span>
+              </div>
             </div>
             <div class="mp-pane-viewport" id="mp-viewport-2">
               <canvas class="mp-crosshair-canvas" id="mp-crosshair-2"></canvas>
@@ -227,7 +251,8 @@ export class MultiplanarViewer {
     this.inputZ = this.modal.querySelector('#mp-input-z');
     this.btnGoMni = this.modal.querySelector('#mp-btn-go-mni');
     this.voxelReadout = this.modal.querySelector('#mp-voxel-val');
-    this.zoom = 1.0;
+    this.zooms = [1.0, 1.0, 1.0];
+    this.panOffsets = [new THREE.Vector2(0, 0), new THREE.Vector2(0, 0), new THREE.Vector2(0, 0)];
     this.zoomSlider = this.modal.querySelector('#mp-zoom-slider');
     this.zoomVal = this.modal.querySelector('#mp-zoom-val');
     this.zoomResetBtn = this.modal.querySelector('#mp-zoom-reset-btn');
@@ -257,6 +282,10 @@ export class MultiplanarViewer {
         viewport: this.modal.querySelector(`#mp-viewport-${i}`),
         crosshairCanvas: this.modal.querySelector(`#mp-crosshair-${i}`),
         crosshairCtx: this.modal.querySelector(`#mp-crosshair-${i}`).getContext('2d'),
+        zoomOutBtn: this.modal.querySelector(`#mp-zoom-out-${i}`),
+        zoomInBtn: this.modal.querySelector(`#mp-zoom-in-${i}`),
+        zoomVal: this.modal.querySelector(`#mp-pane-zoom-val-${i}`),
+        centerBtn: this.modal.querySelector(`#mp-center-btn-${i}`),
         slider: this.modal.querySelector(`#mp-slider-${i}`),
         sliderVal: this.modal.querySelector(`#mp-val-${i}`),
         stepDown: this.modal.querySelector(`#mp-step-down-${i}`),
@@ -417,16 +446,16 @@ export class MultiplanarViewer {
       this.renderCrosshairs();
     });
 
-    // 4b. Zoom Slider & Reset Button (zooms in on crosshairs point)
+    // 4b. Master Zoom Slider & Reset Button
     if (this.zoomSlider) {
       this.zoomSlider.addEventListener('input', (e) => {
-        this.setZoom(parseFloat(e.target.value));
+        this.setAllZooms(parseFloat(e.target.value));
       });
     }
     if (this.zoomResetBtn) {
       this.zoomResetBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.setZoom(1.0);
+        this.resetAllZooms();
       });
     }
 
@@ -599,12 +628,38 @@ export class MultiplanarViewer {
         this.update();
       });
 
+      // Per-pane zoom controls
+      if (pane.zoomOutBtn) {
+        pane.zoomOutBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.setZoom(i, this.zooms[i] - 0.2);
+        });
+      }
+      if (pane.zoomInBtn) {
+        pane.zoomInBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.setZoom(i, this.zooms[i] + 0.2);
+        });
+      }
+      if (pane.zoomVal) {
+        pane.zoomVal.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.setZoom(i, 1.0);
+        });
+      }
+      if (pane.centerBtn) {
+        pane.centerBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.centerOnCrosshairs(i);
+        });
+      }
+
       // Mouse wheel scrub (or zoom when Shift / Ctrl / Alt is held)
       pane.viewport.addEventListener('wheel', (e) => {
         e.preventDefault();
         if (e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) {
           const zoomDelta = e.deltaY < 0 ? 0.2 : -0.2;
-          this.setZoom(this.zoom + zoomDelta);
+          this.setZoom(i, this.zooms[i] + zoomDelta);
           return;
         }
         const delta = e.deltaY < 0 ? 1 : -1;
@@ -620,8 +675,13 @@ export class MultiplanarViewer {
         this.update();
       }, { passive: false });
 
-      // Click & drag navigation on slice
+      // Click & drag navigation on slice, right/middle click drag to pan
       let isCrosshairNavigating = false;
+      let isPanning = false;
+      let lastPanX = 0;
+      let lastPanY = 0;
+
+      pane.crosshairCanvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
       const handleNavPointer = (e) => {
         const rect = pane.crosshairCanvas.getBoundingClientRect();
@@ -662,12 +722,40 @@ export class MultiplanarViewer {
       };
 
       pane.crosshairCanvas.addEventListener('pointerdown', (e) => {
-        isCrosshairNavigating = true;
-        pane.crosshairCanvas.setPointerCapture(e.pointerId);
-        handleNavPointer(e);
+        if (e.button === 2 || e.button === 1 || (e.button === 0 && (e.ctrlKey || e.altKey))) {
+          isPanning = true;
+          lastPanX = e.clientX;
+          lastPanY = e.clientY;
+          pane.crosshairCanvas.setPointerCapture(e.pointerId);
+          return;
+        }
+
+        if (e.button === 0) {
+          isCrosshairNavigating = true;
+          pane.crosshairCanvas.setPointerCapture(e.pointerId);
+          handleNavPointer(e);
+        }
       });
 
       pane.crosshairCanvas.addEventListener('pointermove', (e) => {
+        if (isPanning) {
+          const dx = e.clientX - lastPanX;
+          const dy = e.clientY - lastPanY;
+          lastPanX = e.clientX;
+          lastPanY = e.clientY;
+
+          const camera = this.cameras[i];
+          const rect = pane.crosshairCanvas.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0 && camera) {
+            const mmPerPixelX = (camera.right - camera.left) / rect.width;
+            const mmPerPixelY = (camera.top - camera.bottom) / rect.height;
+            this.panOffsets[i].x -= dx * mmPerPixelX;
+            this.panOffsets[i].y += dy * mmPerPixelY;
+            this.update();
+          }
+          return;
+        }
+
         if (isCrosshairNavigating) {
           handleNavPointer(e);
         } else {
@@ -686,14 +774,23 @@ export class MultiplanarViewer {
       });
 
       pane.crosshairCanvas.addEventListener('pointerup', (e) => {
+        if (isPanning) {
+          isPanning = false;
+          try { pane.crosshairCanvas.releasePointerCapture(e.pointerId); } catch (_) {}
+        }
         if (isCrosshairNavigating) {
           isCrosshairNavigating = false;
           try { pane.crosshairCanvas.releasePointerCapture(e.pointerId); } catch (_) {}
         }
       });
 
+      pane.crosshairCanvas.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        this.centerOnCrosshairs(i);
+      });
+
       pane.crosshairCanvas.addEventListener('pointerleave', () => {
-        if (!isCrosshairNavigating) {
+        if (!isCrosshairNavigating && !isPanning) {
           this.updateVoxelReadout(this.getCrosshairIntersectionPoint());
         }
       });
@@ -803,18 +900,138 @@ export class MultiplanarViewer {
     }
   }
 
+  get zoom() {
+    return this.zooms[0];
+  }
+
+  set zoom(val) {
+    this.setAllZooms(val);
+  }
+
+  getZoom(planeIdx = 0) {
+    return this.zooms[planeIdx] || 1.0;
+  }
+
   /**
-   * Set zoom level for multiplanar slice views (zooming in on crosshairs point)
-   * @param {number} val - Zoom multiplier (1.0x to 6.0x)
+   * Set zoom level for a specific plane (or all planes if planeIdx is a number and no second arg)
+   * @param {number} planeIdx - Plane index (0=Axial, 1=Coronal, 2=Sagittal) or zoom val
+   * @param {number} [val] - Zoom multiplier (1.0x to 6.0x)
    */
-  setZoom(val) {
-    this.zoom = Math.max(1.0, Math.min(6.0, Math.round((parseFloat(val) || 1.0) * 10) / 10));
-    if (this.zoomSlider) this.zoomSlider.value = this.zoom.toFixed(1);
-    if (this.zoomVal) this.zoomVal.textContent = `${this.zoom.toFixed(1)}x`;
+  setZoom(planeIdx, val) {
+    if (val === undefined) {
+      this.setAllZooms(planeIdx);
+      return;
+    }
+    const idx = Math.max(0, Math.min(2, parseInt(planeIdx) || 0));
+    const z = Math.max(1.0, Math.min(6.0, Math.round((parseFloat(val) || 1.0) * 10) / 10));
+    const prevZ = this.zooms[idx];
+    this.zooms[idx] = z;
+
+    const pane = this.panes[idx];
+    if (pane && pane.zoomVal) {
+      pane.zoomVal.textContent = `${z.toFixed(1)}x`;
+      pane.zoomVal.classList.toggle('active', z > 1.0);
+    }
+
+    if (prevZ <= 1.01 && z > 1.01) {
+      this.centerOnCrosshairs(idx);
+    } else if (z <= 1.01) {
+      this.panOffsets[idx].set(0, 0);
+    }
+
+    this.syncMasterZoomDisplay();
+
     if (this.isOpen) {
       this.updateCameraBounds();
       this.update();
     }
+  }
+
+  setAllZooms(val) {
+    const z = Math.max(1.0, Math.min(6.0, Math.round((parseFloat(val) || 1.0) * 10) / 10));
+    for (let i = 0; i < 3; i++) {
+      const prevZ = this.zooms[i];
+      this.zooms[i] = z;
+      const pane = this.panes[i];
+      if (pane && pane.zoomVal) {
+        pane.zoomVal.textContent = `${z.toFixed(1)}x`;
+        pane.zoomVal.classList.toggle('active', z > 1.0);
+      }
+      if (prevZ <= 1.01 && z > 1.01) {
+        this.centerOnCrosshairs(i);
+      } else if (z <= 1.01) {
+        this.panOffsets[i].set(0, 0);
+      }
+    }
+    this.syncMasterZoomDisplay();
+
+    if (this.isOpen) {
+      this.updateCameraBounds();
+      this.update();
+    }
+  }
+
+  resetZoom(planeIdx) {
+    this.setZoom(planeIdx, 1.0);
+  }
+
+  resetAllZooms() {
+    for (let i = 0; i < 3; i++) {
+      this.zooms[i] = 1.0;
+      this.panOffsets[i].set(0, 0);
+      const pane = this.panes[i];
+      if (pane && pane.zoomVal) {
+        pane.zoomVal.textContent = '1.0x';
+        pane.zoomVal.classList.remove('active');
+      }
+    }
+    this.syncMasterZoomDisplay();
+
+    if (this.isOpen) {
+      this.updateCameraBounds();
+      this.update();
+    }
+  }
+
+  syncMasterZoomDisplay() {
+    const allSame = (Math.abs(this.zooms[0] - this.zooms[1]) < 0.05 && Math.abs(this.zooms[1] - this.zooms[2]) < 0.05);
+    if (this.zoomSlider) {
+      this.zoomSlider.value = this.zooms[0].toFixed(1);
+    }
+    if (this.zoomVal) {
+      if (allSame) {
+        this.zoomVal.textContent = `${this.zooms[0].toFixed(1)}x`;
+      } else {
+        this.zoomVal.textContent = 'Mix';
+      }
+    }
+  }
+
+  centerOnCrosshairs(planeIdx) {
+    const cm = this.clippingManager;
+    const p = cm.planes[planeIdx];
+    if (!p) return;
+    const n0 = p.normal0 || cm.sph2cartDeg90x(p.azimuth, p.elevation, 1.0);
+    const cutPoint = cm.brainCenter.clone().add(n0.clone().multiplyScalar(p.depth));
+    const crossPoint = this.getCrosshairIntersectionPoint();
+
+    let viewDir;
+    if (this.radiological) {
+      viewDir = n0.clone().negate();
+    } else {
+      viewDir = (planeIdx === 2) ? n0.clone().negate() : n0.clone();
+    }
+
+    let up = new THREE.Vector3(0, 0, 1);
+    if (Math.abs(viewDir.dot(up)) >= 0.95) {
+      up.set(0, 1, 0);
+    }
+    up.sub(viewDir.clone().multiplyScalar(viewDir.dot(up))).normalize();
+    const rightDir = new THREE.Vector3().crossVectors(viewDir, up).normalize();
+
+    const diff = crossPoint.clone().sub(cutPoint);
+    this.panOffsets[planeIdx].set(diff.dot(rightDir), diff.dot(up));
+    this.update();
   }
 
   updateCameraBounds() {
@@ -825,7 +1042,8 @@ export class MultiplanarViewer {
       if (vpRect.width <= 0 || vpRect.height <= 0) continue;
 
       const aspect = vpRect.width / vpRect.height;
-      const baseHalfExtent = 115 / Math.max(0.1, this.zoom);
+      const zoom_i = this.zooms[i] || 1.0;
+      const baseHalfExtent = 115 / Math.max(0.1, zoom_i);
       const camera = this.cameras[i];
       if (!camera) continue;
 
@@ -880,6 +1098,11 @@ export class MultiplanarViewer {
         ctrl.updateDisplay();
       }
     }
+    for (let j = 0; j < 3; j++) {
+      if (this.zooms[j] > 1.01) {
+        this.centerOnCrosshairs(j);
+      }
+    }
     this.update();
     this.updateVoxelReadout(targetPoint);
   }
@@ -898,9 +1121,7 @@ export class MultiplanarViewer {
     this.clippingManager.planes[2].elevation = 0;
     this.clippingManager.planes[2].depth = 0;
 
-    this.zoom = 1.0;
-    if (this.zoomSlider) this.zoomSlider.value = '1.0';
-    if (this.zoomVal) this.zoomVal.textContent = '1.0x';
+    this.resetAllZooms();
 
     this.clippingManager.update();
     if (this.uiManager) {
@@ -1094,13 +1315,6 @@ export class MultiplanarViewer {
         viewDir = (i === 2) ? n0.clone().negate() : n0.clone();
       }
 
-      // Camera target point: when zoomed, center directly on crosshairs intersection point!
-      const crossPoint = this.getCrosshairIntersectionPoint();
-      const zoomFactor = Math.min(1.0, Math.max(0.0, (this.zoom - 1.0) / 0.15));
-      const lookTarget = cutPoint.clone().lerp(crossPoint, zoomFactor);
-
-      camera.position.copy(lookTarget).addScaledVector(viewDir, -200);
-
       // Stable Up-Vector calculation for arbitrary oblique normal
       let up = new THREE.Vector3(0, 0, 1);
       if (Math.abs(viewDir.dot(up)) >= 0.95) {
@@ -1109,6 +1323,15 @@ export class MultiplanarViewer {
       }
       // Project up vector perpendicular to viewDir
       up.sub(viewDir.clone().multiplyScalar(viewDir.dot(up))).normalize();
+      const rightDir = new THREE.Vector3().crossVectors(viewDir, up).normalize();
+
+      // Camera target point: center on cutPoint + plane-specific panOffset
+      const pan = this.panOffsets[i] || new THREE.Vector2(0, 0);
+      const lookTarget = cutPoint.clone()
+        .addScaledVector(rightDir, pan.x)
+        .addScaledVector(up, pan.y);
+
+      camera.position.copy(lookTarget).addScaledVector(viewDir, -200);
 
       camera.up.copy(up);
       camera.lookAt(lookTarget);

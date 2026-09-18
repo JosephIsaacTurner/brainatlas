@@ -275,22 +275,19 @@ export class UIManager {
 
 
   setSliceVisible(visible) {
-    if (this.clippingManager.sliceVisible !== visible) {
-      this.clippingManager.sliceVisible = visible;
-      this.clippingManager.update();
-    }
+    this.clippingManager.setSliceVisible(visible);
 
     const ind = document.getElementById('ind-slice');
     const btn = document.getElementById('btn-toggle-slice');
     if (ind) ind.classList.toggle('active', visible);
     if (btn) btn.classList.toggle('active', visible);
 
-    if (this.clipSliceVisController && this.clipSliceVisController.getValue() !== visible) {
-      this.clipSliceVisController.setValue(visible);
+    if (this.clipSliceVisController) {
+      this.clipSliceVisController.updateDisplay();
     }
 
-    if (this.sliceVisController && this.sliceVisController.getValue() !== visible) {
-      this.sliceVisController.setValue(visible);
+    if (this.sliceVisController) {
+      this.sliceVisController.updateDisplay();
     }
   }
 

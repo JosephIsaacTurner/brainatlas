@@ -107,6 +107,11 @@ export class ClippingManager {
     this.initSlices();
   }
 
+  setSliceVisible(visible) {
+    this.sliceVisible = Boolean(visible);
+    this.update();
+  }
+
   setRawWindow(rawMin, rawMax) {
     this.rawWindowMin = rawMin;
     this.rawWindowMax = rawMax;
